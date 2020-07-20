@@ -18,6 +18,17 @@ public struct CustomSearchBar: UIViewRepresentable {
     @State public var placeholder: String? = nil
     @State public var tintColor: UIColor? = nil
     @State public var textDidChangeCallback: (String) -> Void = {_ in}
+    
+    public init(text: Binding<String>, endSearch: Binding<Bool>, showCancel: Bool = false, numpadOnly: Bool = false, placeholder: String? = nil, tintColor: UIColor? = nil, textDidChangeCallback: @escaping (String) -> Void = {_ in}) {
+        self._text = text
+        self._endSearch = endSearch
+        self.showCancel = showCancel
+        self.numpadOnly = numpadOnly
+        self.placeholder = placeholder
+        self.tintColor = tintColor
+        self.textDidChangeCallback = textDidChangeCallback
+    }
+    
     public class Coordinator: NSObject, UISearchBarDelegate {
         @Binding var needShowCancel: Bool
         @Binding var text: String

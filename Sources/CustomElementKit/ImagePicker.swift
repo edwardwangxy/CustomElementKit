@@ -12,9 +12,17 @@ import MobileCoreServices
 public struct ImagePicker: UIViewControllerRepresentable {
     @Environment(\.presentationMode) var presentationMode
     @Binding public var image: UIImage?
-    @State public var sourceType: UIImagePickerController.SourceType = .photoLibrary
-    @State public var cameraType: UIImagePickerController.CameraDevice = .front
-    @State public var dismissAction: () -> Void = {}
+    public var sourceType: UIImagePickerController.SourceType = .photoLibrary
+    public var cameraType: UIImagePickerController.CameraDevice = .front
+    public var dismissAction: () -> Void = {}
+    
+    public init(image: Binding<UIImage?>, sourceType: UIImagePickerController.SourceType = .photoLibrary, cameraType: UIImagePickerController.CameraDevice = .front, dismissAction: @escaping () -> Void = {}) {
+        self._image = image
+        self.sourceType = sourceType
+        self.cameraType = cameraType
+        self.dismissAction = dismissAction
+    }
+    
     public func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }

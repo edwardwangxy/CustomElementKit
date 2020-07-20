@@ -33,10 +33,17 @@ public struct CustomTextView: UIViewRepresentable {
     }
     
     @Binding public var text: String
-    @State public var acceptOnlyInteger: Bool = false
+    @Binding public var acceptOnlyInteger: Bool
     @State public var dynamicResponder: Bool = false
     @Binding public var isFirstResponder: Bool
     public var textField: CustomUITextView = CustomUITextView(frame: .zero)
+    
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>) {
+        self._text = text
+        self._acceptOnlyInteger = acceptOnlyInteger
+        self._isFirstResponder = isFirstResponder
+        self.dynamicResponder = dynamicResponder
+    }
     
     public func makeUIView(context: UIViewRepresentableContext<CustomTextView>) -> CustomUITextView {
         self.textField.delegate = context.coordinator

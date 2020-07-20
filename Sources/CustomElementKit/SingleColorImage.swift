@@ -14,6 +14,13 @@ public struct SingleColorImage: View {
     public var image: Image
     public var backgroundColor: Color
     public var size: CGSize
+    
+    public init(image: Image, backgroundColor: Color, size: CGSize) {
+        self.image = image
+        self.backgroundColor = backgroundColor
+        self.size = size
+    }
+    
     public var body: some View {
         Rectangle()
             .foregroundColor(self.backgroundColor)

@@ -8,7 +8,7 @@
 import UIKit
 
 public class CustomUITextField: UITextField {
-    var actionType = TextFieldCanPerformAction()
+    public var actionType = TextFieldCanPerformAction()
     
     public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         if UIPasteboard.general.string != nil {
@@ -27,7 +27,7 @@ public class CustomUITextField: UITextField {
 }
 
 public class CustomUITextView: UITextView {
-    var actionType = TextFieldCanPerformAction()
+    public var actionType = TextFieldCanPerformAction()
     
     public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         if UIPasteboard.general.string != nil {
@@ -46,14 +46,14 @@ public class CustomUITextView: UITextView {
 
 
 
-struct TextFieldCanPerformAction {
-    var paste = #selector(UIResponderStandardEditActions.paste(_:))
-    var cut = #selector(UIResponderStandardEditActions.cut(_:))
-    var copy = #selector(UIResponderStandardEditActions.copy(_:))
-    var select = #selector(UIResponderStandardEditActions.select(_:))
-    var selectAll = #selector(UIResponderStandardEditActions.selectAll(_:))
+public struct TextFieldCanPerformAction {
+    public var paste = #selector(UIResponderStandardEditActions.paste(_:))
+    public var cut = #selector(UIResponderStandardEditActions.cut(_:))
+    public var copy = #selector(UIResponderStandardEditActions.copy(_:))
+    public var select = #selector(UIResponderStandardEditActions.select(_:))
+    public var selectAll = #selector(UIResponderStandardEditActions.selectAll(_:))
 
-    func onlyAllowAbove(action: Selector) -> Bool {
+    public func onlyAllowAbove(action: Selector) -> Bool {
         switch action {
         case self.paste:
             return true

@@ -42,11 +42,19 @@ public struct CustomTextField: UIViewRepresentable {
     }
     
     @Binding public var text: String
-    @State public var acceptOnlyInteger: Bool = false
-    @State public var dynamicResponder: Bool = false
+    @Binding public var acceptOnlyInteger: Bool
+    public var dynamicResponder: Bool = false
     @Binding public var isSecureTextEntry: Bool
     @Binding public var isFirstResponder: Bool
     public var textField: CustomUITextField = CustomUITextField(frame: .zero)
+    
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isSecureTextEntry: Binding<Bool>, isFirstResponder: Binding<Bool>) {
+        self._text = text
+        self._acceptOnlyInteger = acceptOnlyInteger
+        self.dynamicResponder = dynamicResponder
+        self._isSecureTextEntry = isSecureTextEntry
+        self._isFirstResponder = isFirstResponder
+    }
     
     public func makeUIView(context: UIViewRepresentableContext<CustomTextField>) -> CustomUITextField {
         self.textField.delegate = context.coordinator
