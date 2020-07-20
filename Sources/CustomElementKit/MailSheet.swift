@@ -11,12 +11,20 @@ import UIKit
 import MessageUI
 
 public struct MailSheet: UIViewControllerRepresentable {
-    @State public var recipient: String
-    @State public var subject: String
-    @State public var messageBody: String
-    @State public var isHtml: Bool
-    @Environment(\.presentationMode) var presentation
+    public var recipient: String
+    public var subject: String
+    public var messageBody: String
+    public var isHtml: Bool
     @Binding var result: Result<MFMailComposeResult, Error>?
+    @Environment(\.presentationMode) var presentation
+    
+    public init(recipient: String, subject: String, messageBody: String, isHtml: Bool, result: Binding<Result<MFMailComposeResult, Error>?>) {
+        self.recipient = recipient
+        self.subject = subject
+        self.messageBody = messageBody
+        self.isHtml = isHtml
+        self._result = result
+    }
 
     public class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
 
