@@ -24,6 +24,19 @@ public struct ShareSheet: UIViewControllerRepresentable {
         }
     }
     
+    public init(shareTitle: String, shareDescription: String, shareLink: String, shareImage: UIImage? = nil, applicationActivities: [UIActivity]? = nil, excludedActivityTypes: [UIActivity.ActivityType]? = nil, callback: @escaping Callback = {(shareType, complete, _, _) in
+        if complete {
+            print("share complete with \(shareType?.rawValue ?? "unknown")")
+        }
+    }) {
+        self.shareTitle = shareTitle
+        self.shareDescription = shareDescription
+        self.shareLink = shareLink
+        self.applicationActivities = applicationActivities
+        self.excludedActivityTypes = excludedActivityTypes
+        self.callback = callback
+    }
+    
     public func makeUIViewController(context: Context) -> UIActivityViewController {
         let shareLinkURL = URL(string: self.shareLink)
         let activityItemList: [Any] = [shareLinkURL as Any]  //[self.shareTitle + "\n" + self.shareDescription, shareLinkURL as Any]
