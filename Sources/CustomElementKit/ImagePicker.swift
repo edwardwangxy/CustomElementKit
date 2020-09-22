@@ -12,15 +12,17 @@ import MobileCoreServices
 public struct ImagePicker: UIViewControllerRepresentable {
     @Environment(\.presentationMode) var presentationMode
     @Binding public var image: UIImage?
+    public var allowEditing: Bool = true
     public var sourceType: UIImagePickerController.SourceType = .photoLibrary
     public var cameraType: UIImagePickerController.CameraDevice = .front
     public var dismissAction: () -> Void = {}
     
-    public init(image: Binding<UIImage?>, sourceType: UIImagePickerController.SourceType = .photoLibrary, cameraType: UIImagePickerController.CameraDevice = .front, dismissAction: @escaping () -> Void = {}) {
+    public init(image: Binding<UIImage?>, allowEditing: Bool = true, sourceType: UIImagePickerController.SourceType = .photoLibrary, cameraType: UIImagePickerController.CameraDevice = .front, dismissAction: @escaping () -> Void = {}) {
         self._image = image
         self.sourceType = sourceType
         self.cameraType = cameraType
         self.dismissAction = dismissAction
+        self.allowEditing = allowEditing
     }
     
     public func makeCoordinator() -> Coordinator {
@@ -45,7 +47,7 @@ public struct ImagePicker: UIViewControllerRepresentable {
     
     public func makeUIViewController(context: UIViewControllerRepresentableContext<ImagePicker>) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.allowsEditing = true
+        picker.allowsEditing = self.allowEditing
         picker.mediaTypes = [kUTTypeImage as String]
         picker.sourceType = self.sourceType
         if self.sourceType == .camera {
