@@ -11,7 +11,11 @@ import UIKit
 
 public struct CustomClippedView<Content: View>: UIViewControllerRepresentable {
 
-    public var content: () -> Content
+    var content: () -> Content
+    
+    public init(@ViewBuilder builder: @escaping () -> Content) {
+        self.content = builder
+    }
     
     public func makeUIViewController(context: Context) -> UIHostingController<Content> {
         UIHostingController(rootView: self.content())
