@@ -18,13 +18,14 @@ public struct ShareSheet: UIViewControllerRepresentable {
     public var shareImage: UIImage?
     public var applicationActivities: [UIActivity]? = nil
     public var excludedActivityTypes: [UIActivity.ActivityType]? = nil
+    public var activityItemList: [Any] = [Any]()
     public var callback: Callback? = {(shareType, complete, _, _) in
         if complete {
             print("share complete with \(shareType?.rawValue ?? "unknown")")
         }
     }
     
-    public init(shareTitle: String, shareDescription: String, shareLink: String, shareImage: UIImage? = nil, applicationActivities: [UIActivity]? = nil, excludedActivityTypes: [UIActivity.ActivityType]? = nil, callback: @escaping Callback = {(shareType, complete, _, _) in
+    public init(shareTitle: String, shareDescription: String, shareLink: String, shareImage: UIImage? = nil, applicationActivities: [UIActivity]? = nil, excludedActivityTypes: [UIActivity.ActivityType]? = nil, activityItemList: [Any] = [Any](), callback: @escaping Callback = {(shareType, complete, _, _) in
         if complete {
             print("share complete with \(shareType?.rawValue ?? "unknown")")
         }
@@ -34,12 +35,17 @@ public struct ShareSheet: UIViewControllerRepresentable {
         self.shareLink = shareLink
         self.applicationActivities = applicationActivities
         self.excludedActivityTypes = excludedActivityTypes
+        self.activityItemList = activityItemList
+        let shareLinkURL = URL(string: self.shareLink)
+        if self.activityItemList.count == 0 {
+            self.activityItemList.append(shareLinkURL as Any)
+        }
         self.callback = callback
     }
     
     public func makeUIViewController(context: Context) -> UIActivityViewController {
-        let shareLinkURL = URL(string: self.shareLink)
-        let activityItemList: [Any] = [shareLinkURL as Any]  //[self.shareTitle + "\n" + self.shareDescription, shareLinkURL as Any]
+        
+          //[self.shareTitle + "\n" + self.shareDescription, shareLinkURL as Any]
         // If you want to put an image
 //        if let theImage = shareImage {
 //            activityItemList.append(theImage)
