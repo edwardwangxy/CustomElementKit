@@ -9,25 +9,15 @@ import Foundation
 import SwiftUI
 import UIKit
 
-public struct CustomClippedView<Content: View>: UIViewRepresentable {
+public struct CustomClippedView<Content: View>: UIViewControllerRepresentable {
 
-    var content: Content
+    var content: () -> Content
     
-    public init(@ViewBuilder builder: () -> Content) {
-        self.content = builder()
+    public func makeUIViewController(context: Context) -> UIHostingController<Content> {
+        UIHostingController(rootView: self.content())
     }
-
-    public func makeUIView(context: UIViewRepresentableContext<CustomClippedView>) -> UIView {
-        let view = UIView()
-        let child = UIHostingController(rootView: self.content)
-        child.view.translatesAutoresizingMaskIntoConstraints = false
-        child.view.frame = view.bounds
-        view.addSubview(child.view)
-        view.clipsToBounds = true
-        return view
-    }
-
-    public func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<CustomClippedView>) {
-        
+    
+    public func updateUIViewController(_ uiViewController: UIHostingController<Content>, context: Context) {
+        uiViewController.rootView = self.content()
     }
 }
