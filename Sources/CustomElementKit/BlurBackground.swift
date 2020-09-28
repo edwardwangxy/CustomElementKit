@@ -9,13 +9,20 @@ import SwiftUI
 
 public struct BlurBackground: UIViewRepresentable {
     var style: UIBlurEffect.Style
-    
-    public init(style: UIBlurEffect.Style) {
+    var blurPercent: CGFloat
+    let blurAnimator = UIViewPropertyAnimator()
+    let blur = UIVisualEffectView()
+    public init(style: UIBlurEffect.Style, blurPercent: CGFloat = 1) {
         self.style = style
+        self.blurPercent = blurPercent
     }
     
     public func makeUIView(context: Context) -> UIVisualEffectView {
-        return UIVisualEffectView(effect: UIBlurEffect(style: style))
+        self.blurAnimator.addAnimations {
+            self.blur.effect = UIBlurEffect(style: self.style)
+        }
+        self.blurAnimator.fractionComplete = self.blurPercent
+        return self.blur
     }
     
     public func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
