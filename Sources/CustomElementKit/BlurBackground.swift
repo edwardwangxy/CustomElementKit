@@ -29,6 +29,7 @@ public struct BlurBackground: UIViewRepresentable {
     
     public func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
         if self.blurAnimator.state != .inactive {
+            self.blurAnimator.stopAnimation(true)
             self.blurAnimator.finishAnimation(at: .current)
         }
     }
