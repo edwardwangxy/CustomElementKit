@@ -12,6 +12,7 @@ public struct BlurBackground: UIViewRepresentable {
     var blurPercent: CGFloat
     let blurAnimator = UIViewPropertyAnimator()
     let blur = UIVisualEffectView()
+
     public init(style: UIBlurEffect.Style, blurPercent: CGFloat = 1) {
         self.style = style
         self.blurPercent = blurPercent
@@ -22,15 +23,15 @@ public struct BlurBackground: UIViewRepresentable {
             self.blur.effect = UIBlurEffect(style: self.style)
         }
         self.blurAnimator.fractionComplete = self.blurPercent
-//        self.blurAnimator.stopAnimation(true)
-//        self.blurAnimator.finishAnimation(at: .current)
+        DispatchQueue.main.async {
+            self.blurAnimator.stopAnimation(true)
+            self.blurAnimator.finishAnimation(at: .current)
+        }
+        
         return self.blur
     }
     
     public func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
-        if self.blurAnimator.state != .inactive {
-            self.blurAnimator.stopAnimation(true)
-            self.blurAnimator.finishAnimation(at: .current)
-        }
+
     }
 }
