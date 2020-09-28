@@ -82,9 +82,12 @@ public class ListScrollingProxy: ObservableObject {
         
     }
     
-    public func catchScrollView(for view: UIView, forcePage: Bool = false) {
+    public func catchScrollView(for view: UIView, forcePage: Bool = true) {
         if nil == scrollView {
             if let getScroll = view.enclosingScrollView() {
+                if forcePage {
+                    getScroll.isPagingEnabled = true
+                }
                 print("get Scroll view")
                 if self.scrollView == nil {
                     if self.scrollToButtom {
@@ -93,9 +96,7 @@ public class ListScrollingProxy: ObservableObject {
                         self.notification.firstTimeScrollBottom = true
                     }
                     self.scrollView = getScroll
-                    if forcePage {
-                        self.scrollView?.isPagingEnabled = true
-                    }
+                    
                 }
             }
         }
