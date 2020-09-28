@@ -16,9 +16,17 @@ public enum ListScrollingHelperCatchType {
 }
 
 public struct ListScrollingHelper: UIViewRepresentable {
-    @State var catchType: ListScrollingHelperCatchType
+    var catchType: ListScrollingHelperCatchType
+    var forcePage: Bool = false
     @Binding var proxy: ListScrollingProxy // reference type
     @Binding var reCatch: Bool
+    
+    public init(catchType: ListScrollingHelperCatchType, forcePage: Bool = false, proxy: Binding<ListScrollingProxy>, reCatch: Binding<Bool>) {
+        self.catchType = catchType
+        self.forcePage = forcePage
+        self._proxy = proxy
+        self._reCatch = reCatch
+    }
     
     public func makeUIView(context: Context) -> UIView {
         return UIView() // managed by SwiftUI, no overloads
@@ -28,7 +36,7 @@ public struct ListScrollingHelper: UIViewRepresentable {
         if catchType == .table {
             proxy.catchScrollTable(for: uiView)
         } else {
-            proxy.catchScrollView(for: uiView) // here UIView is in view hierarchy
+            proxy.catchScrollView(for: uiView, forcePage: self.forcePage) // here UIView is in view hierarchy
         }
     }
 }
@@ -74,7 +82,7 @@ public class ListScrollingProxy: ObservableObject {
         
     }
     
-    public func catchScrollView(for view: UIView) {
+    public func catchScrollView(for view: UIView, forcePage: Bool = false) {
         if nil == scrollView {
             if let getScroll = view.enclosingScrollView() {
                 print("get Scroll view")
@@ -85,6 +93,9 @@ public class ListScrollingProxy: ObservableObject {
                         self.notification.firstTimeScrollBottom = true
                     }
                     self.scrollView = getScroll
+                    if forcePage {
+                        self.scrollView?.isPagingEnabled = true
+                    }
                 }
             }
         }
