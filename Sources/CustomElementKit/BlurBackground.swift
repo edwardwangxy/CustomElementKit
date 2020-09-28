@@ -22,12 +22,14 @@ public struct BlurBackground: UIViewRepresentable {
             self.blur.effect = UIBlurEffect(style: self.style)
         }
         self.blurAnimator.fractionComplete = self.blurPercent
-        self.blurAnimator.stopAnimation(true)
-        self.blurAnimator.finishAnimation(at: .current)
+//        self.blurAnimator.stopAnimation(true)
+//        self.blurAnimator.finishAnimation(at: .current)
         return self.blur
     }
     
     public func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
-        uiView.effect = UIBlurEffect(style: style)
+        if self.blurAnimator.state != .inactive {
+            self.blurAnimator.finishAnimation(at: .current)
+        }
     }
 }
