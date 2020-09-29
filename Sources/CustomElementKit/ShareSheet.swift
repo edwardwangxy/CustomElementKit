@@ -18,7 +18,7 @@ public struct ShareSheet: UIViewControllerRepresentable {
     public var shareImage: UIImage?
     public var applicationActivities: [UIActivity]? = nil
     public var excludedActivityTypes: [UIActivity.ActivityType]? = nil
-    public var activityItemList: [Any] = [Any]()
+    public var setActivityItemList: [Any] = [Any]()
     public var callback: Callback? = {(shareType, complete, _, _) in
         if complete {
             print("share complete with \(shareType?.rawValue ?? "unknown")")
@@ -35,24 +35,26 @@ public struct ShareSheet: UIViewControllerRepresentable {
         self.shareLink = shareLink
         self.applicationActivities = applicationActivities
         self.excludedActivityTypes = excludedActivityTypes
-        self.activityItemList = activityItemList
+        self.setActivityItemList = activityItemList
         let shareLinkURL = URL(string: self.shareLink)
-        if self.activityItemList.count == 0 {
-            self.activityItemList.append(shareLinkURL as Any)
+        if self.setActivityItemList.count == 0 {
+            self.setActivityItemList.append(shareLinkURL as Any)
         }
-        self.activityItemList.append(self.shareTitle + "\n" + self.shareDescription)
+        self.setActivityItemList.append(self.shareTitle + "\n" + self.shareDescription)
         if let theImage = self.shareImage {
-            self.activityItemList.append(theImage)
+            self.setActivityItemList.append(theImage)
         }
         self.callback = callback
     }
     
     public func makeUIViewController(context: Context) -> UIActivityViewController {
-        //[self.shareTitle + "\n" + self.shareDescription, shareLinkURL as Any]
-      // If you want to put an image
-//        if let theImage = shareImage {
-//            activityItemList.append(theImage)
-//        }
+        let shareLinkURL = URL(string: self.shareLink)
+        var activityItemList: [Any] = [self.shareTitle + "\n" + self.shareDescription, shareLinkURL as Any] + self.setActivityItemList
+        // If you want to put an image
+        if let theImage = shareImage {
+            activityItemList.append(theImage)
+        }
+        
         let controller : UIActivityViewController = UIActivityViewController(
             activityItems: activityItemList, applicationActivities: applicationActivities)
         controller.excludedActivityTypes = excludedActivityTypes
