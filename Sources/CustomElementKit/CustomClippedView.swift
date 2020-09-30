@@ -18,7 +18,9 @@ public struct CustomClippedView<Content: View>: UIViewControllerRepresentable {
     }
     
     public func makeUIViewController(context: Context) -> UIHostingController<Content> {
-        UIHostingController(rootView: self.content())
+        let view = UIHostingController(rootView: self.content())
+        view.view.backgroundColor = .clear
+        return view
     }
     
     public func updateUIViewController(_ uiViewController: UIHostingController<Content>, context: Context) {
