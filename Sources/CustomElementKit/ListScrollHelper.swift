@@ -87,6 +87,7 @@ public class ListScrollingProxy: ObservableObject {
             if let getScroll = view.enclosingScrollView() {
                 if forcePage {
                     getScroll.isPagingEnabled = true
+                    getScroll.clipsToBounds = false
                 }
                 print("get Scroll view")
                 if self.scrollView == nil {
