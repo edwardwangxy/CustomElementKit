@@ -16,15 +16,17 @@ public struct CustomSearchBar: UIViewRepresentable {
     @State public var showCancel: Bool = false
     @State public var numpadOnly: Bool = false
     @State public var placeholder: String? = nil
+    @State public var placeholderColor: UIColor? = nil
     @State public var tintColor: UIColor? = nil
     @State public var textDidChangeCallback: (String) -> Void = {_ in}
     
-    public init(text: Binding<String>, endSearch: Binding<Bool>, showCancel: Bool = false, numpadOnly: Bool = false, placeholder: String? = nil, tintColor: UIColor? = nil, textDidChangeCallback: @escaping (String) -> Void = {_ in}) {
+    public init(text: Binding<String>, endSearch: Binding<Bool>, showCancel: Bool = false, numpadOnly: Bool = false, placeholder: String? = nil, placeholderColor: UIColor? = nil, tintColor: UIColor? = nil, textDidChangeCallback: @escaping (String) -> Void = {_ in}) {
         self._text = text
         self._endSearch = endSearch
         self.showCancel = showCancel
         self.numpadOnly = numpadOnly
         self.placeholder = placeholder
+        self.placeholderColor = placeholderColor
         self.tintColor = tintColor
         self.textDidChangeCallback = textDidChangeCallback
     }
@@ -74,6 +76,12 @@ public struct CustomSearchBar: UIViewRepresentable {
         searchBar.searchBarStyle = .prominent
         searchBar.backgroundImage = UIImage()
         searchBar.placeholder = "Search"
+        if let getSearchTextField = searchBar.value(forKey: "searchField") as? UITextField, let setPlaceholder = self.placeholder {
+            if getSearchTextField.responds(to: #selector(getter: UITextField.attributedPlaceholder)) {
+                let attributeDict = [NSAttributedString.Key.foregroundColor: self.placeholderColor ?? UIColor.gray]
+                getSearchTextField.attributedPlaceholder = NSAttributedString(string: setPlaceholder, attributes: attributeDict)
+            }
+        }
         return searchBar
     }
 
