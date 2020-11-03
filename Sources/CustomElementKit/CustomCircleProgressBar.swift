@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CustomCircleProgressBar: View {
+public struct CustomCircleProgressBar: View {
     @Binding var progress: Double
     @State var lineWidth: CGFloat = 10
     @State var color: Color = Color.red
@@ -24,7 +24,7 @@ struct CustomCircleProgressBar: View {
         self.textColor = textColor
     }
     
-    var body: some View {
+    public var body: some View {
         ZStack {
             Circle()
                 .stroke(lineWidth: self.lineWidth)
