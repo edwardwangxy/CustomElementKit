@@ -20,6 +20,14 @@ public struct ListScrollingHelper: UIViewRepresentable {
     var forcePage: Bool = false
     @Binding var proxy: ListScrollingProxy // reference type
     @Binding var reCatch: Bool
+    private var setView = UIView()
+    public func forceUpdate() {
+        if catchType == .table {
+            proxy.catchScrollTable(for: self.setView)
+        } else {
+            proxy.catchScrollView(for: self.setView, forcePage: self.forcePage) // here UIView is in view hierarchy
+        }
+    }
     
     public init(catchType: ListScrollingHelperCatchType, forcePage: Bool = false, proxy: Binding<ListScrollingProxy>, reCatch: Binding<Bool>) {
         self.catchType = catchType
@@ -29,7 +37,7 @@ public struct ListScrollingHelper: UIViewRepresentable {
     }
     
     public func makeUIView(context: Context) -> UIView {
-        return UIView() // managed by SwiftUI, no overloads
+        return self.setView // managed by SwiftUI, no overloads
     }
 
     public func updateUIView(_ uiView: UIView, context: Context) {
