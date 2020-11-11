@@ -41,6 +41,7 @@ public struct ListScrollingHelper: UIViewRepresentable {
     }
 
     public func updateUIView(_ uiView: UIView, context: Context) {
+        print("List Scroll Helper Update")
         if catchType == .table {
             proxy.catchScrollTable(for: uiView)
         } else {
