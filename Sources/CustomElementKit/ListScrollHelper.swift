@@ -18,8 +18,8 @@ public enum ListScrollingHelperCatchType {
 public struct ListScrollingHelper: UIViewRepresentable {
     var catchType: ListScrollingHelperCatchType
     var forcePage: Bool = false
-    @Binding var proxy: ListScrollingProxy // reference type
-    @Binding var reCatch: Bool
+    @Binding public var proxy: ListScrollingProxy // reference type
+    @Binding public var reCatch: Bool
     private var setView = UIView()
     public func forceUpdate() {
         if catchType == .table {
