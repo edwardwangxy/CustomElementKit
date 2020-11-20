@@ -41,7 +41,7 @@ public extension VideoPlayerView {
     }
 }
 
-class PlayerUIView: UIView {
+public class PlayerUIView: UIView {
     public var playerLayer = AVPlayerLayer()
 //    public var player: AVPlayer?
     private var endHandler: () -> Void = {}
@@ -52,7 +52,7 @@ class PlayerUIView: UIView {
     var looper: AVPlayerLooper? = nil
     
     private var timer: DispatchSourceTimer? = nil
-    init() {
+    public init() {
         super.init(frame: .zero)
         self.createPlayer()
     }
@@ -73,15 +73,15 @@ class PlayerUIView: UIView {
         self.layer.addSublayer(self.playerLayer)
     }
     
-    func updateGravity(mode: AVLayerVideoGravity) {
+    public func updateGravity(mode: AVLayerVideoGravity) {
         self.playerLayer.videoGravity = mode
     }
     
-    func updateComplete(handler: @escaping () -> Void) {
+    public func updateComplete(handler: @escaping () -> Void) {
         self.endHandler = handler
     }
     
-    func setObserveKeepup(handler: @escaping (AVPlayer?) -> Void) {
+    public func setObserveKeepup(handler: @escaping (AVPlayer?) -> Void) {
         self.observeKeepup = handler
     }
     
@@ -109,7 +109,7 @@ class PlayerUIView: UIView {
         self.playerLayer.player = nil
     }
     
-    func updateVideo(url: URL) {
+    public func updateVideo(url: URL) {
         if url == self.currentUrl {
             return
         }
@@ -125,7 +125,7 @@ class PlayerUIView: UIView {
         
     }
     
-    func loopVideo(url: URL) {
+    public func loopVideo(url: URL) {
         if url == self.currentUrl {
             return
         }
@@ -144,7 +144,7 @@ class PlayerUIView: UIView {
         
     }
     
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         playerLayer.frame = bounds
     }
