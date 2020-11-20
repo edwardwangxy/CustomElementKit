@@ -13,9 +13,11 @@ public struct VideoPlayerView: UIViewRepresentable {
 //    @Binding var videoURL: URL?
 //    @Binding var readyToPlay: Bool
 //    @State var needAspectFill: Bool = false
+    @Binding var play: Bool
     @State var playerUIView = PlayerUIView()
     
-    public init(url: URL, loop: Bool = false) {
+    public init(play: Binding<Bool>, url: URL, loop: Bool = false) {
+        self._play = play
         if loop {
             self.playerUIView.loopVideo(url: url)
         } else {
@@ -25,7 +27,11 @@ public struct VideoPlayerView: UIViewRepresentable {
 //    @State var endHandler: () -> Void = {}
 
     public func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<VideoPlayerView>) {
-        print("video update")
+        if self.play {
+            self.playerUIView.play()
+        } else {
+            self.playerUIView.pause()
+        }
     }
     
     public func makeUIView(context: Context) -> UIView {
@@ -109,6 +115,14 @@ public class PlayerUIView: UIView {
         self.playerLayer.player = nil
     }
     
+    public func play() {
+        self.playerLayer.player?.play()
+    }
+    
+    public func pause() {
+        self.playerLayer.player?.pause()
+    }
+    
     public func updateVideo(url: URL) {
         if url == self.currentUrl {
             return
@@ -120,9 +134,7 @@ public class PlayerUIView: UIView {
         DispatchQueue.main.async {
             self.playerLayer.player?.replaceCurrentItem(with: item)
             self.observePlayer(item: item)
-            self.playerLayer.player?.play()
         }
-        
     }
     
     public func loopVideo(url: URL) {
