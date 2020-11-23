@@ -113,7 +113,7 @@ public class PlayerUIView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func removeVideo() {
+    public func removeVideo() {
         self.removePlayerObserver()
         self.playerLayer.player?.pause()
         self.playerLayer.player?.replaceCurrentItem(with: nil)
