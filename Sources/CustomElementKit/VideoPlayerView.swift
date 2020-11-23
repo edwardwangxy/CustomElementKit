@@ -21,7 +21,14 @@ public struct VideoPlayerView: UIViewRepresentable {
         self.playerUIView = playerUIView
     }
     
-    public init(play: Binding<Bool>, url: URL, loop: Bool = false) {
+    public init(play: Binding<Bool>, url: URL, loop: Bool = false, forceAudio: Bool = true) {
+        if forceAudio {
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback)
+            } catch(let error) {
+                print(error.localizedDescription)
+            }
+        }
         self._play = play
         if loop {
             self.playerUIView.loopVideo(url: url)
