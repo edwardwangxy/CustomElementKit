@@ -16,6 +16,11 @@ public struct VideoPlayerView: UIViewRepresentable {
     @Binding var play: Bool
     @State var playerUIView = PlayerUIView()
     
+    public init(playerUIView: PlayerUIView, play: Binding<Bool> = .constant(true)) {
+        self._play = play
+        self.playerUIView = playerUIView
+    }
+    
     public init(play: Binding<Bool>, url: URL, loop: Bool = false) {
         self._play = play
         if loop {
