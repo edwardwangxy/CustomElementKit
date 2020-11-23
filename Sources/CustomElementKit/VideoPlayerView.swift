@@ -58,8 +58,9 @@ public extension VideoPlayerView {
         return self
     }
     
-    func mute(_ result: Bool) {
+    func mute(_ result: Bool) -> VideoPlayerView {
         self.playerUIView.playerLayer.player?.isMuted = result
+        return self
     }
 }
 
