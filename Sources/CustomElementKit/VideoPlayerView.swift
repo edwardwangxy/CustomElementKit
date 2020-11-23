@@ -57,6 +57,10 @@ public extension VideoPlayerView {
         self.playerUIView.updateGravity(mode: mode)
         return self
     }
+    
+    func mute(_ result: Bool) {
+        self.playerUIView.playerLayer.player?.isMuted = result
+    }
 }
 
 public class PlayerUIView: UIView {
