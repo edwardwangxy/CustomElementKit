@@ -128,7 +128,7 @@ public class PlayerUIView: UIView {
         self.playerLayer.player?.pause()
     }
     
-    public func updateVideo(url: URL) {
+    public func updateVideo(url: URL, play: Bool = false) {
         if url == self.currentUrl {
             return
         }
@@ -139,6 +139,14 @@ public class PlayerUIView: UIView {
         DispatchQueue.main.async {
             self.playerLayer.player?.replaceCurrentItem(with: item)
             self.observePlayer(item: item)
+            if play {
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(.playback)
+                } catch(let error) {
+                    print(error.localizedDescription)
+                }
+                self.playerLayer.player?.play()
+            }
         }
     }
     
