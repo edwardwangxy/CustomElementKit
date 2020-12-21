@@ -68,32 +68,17 @@ public class PlayerUIView: UIView {
     public var playerLayer = AVPlayerLayer()
 //    public var player: AVPlayer?
     private var endHandler: () -> Void = {}
-    private var observeKeepup: (AVPlayer?) -> Void = {_ in}
+    private var observeKeepup: (Bool) -> Void = {_ in}
     var currentUrl: URL?
     var currentObserver: Any? = nil
     var finishObserver: Any? = nil
     var looper: AVPlayerLooper? = nil
     
     private var timer: DispatchSourceTimer? = nil
+    
     public init() {
         super.init(frame: .zero)
         self.createPlayer()
-    }
-    
-    func activateTimer() {
-        self.timer?.cancel()
-        self.timer = DispatchSource.makeTimerSource()
-        self.timer?.schedule(deadline: .now(), repeating: 0.5)
-        self.timer?.setEventHandler(handler: {
-            self.observeKeepup(self.playerLayer.player)
-        })
-        self.timer?.resume()
-    }
-    
-    func createPlayer(item: AVPlayerItem? = nil) {
-        self.playerLayer = AVPlayerLayer()
-        self.playerLayer.player = AVPlayer(playerItem: item)
-        self.layer.addSublayer(self.playerLayer)
     }
     
     public func updateGravity(mode: AVLayerVideoGravity) {
@@ -104,21 +89,8 @@ public class PlayerUIView: UIView {
         self.endHandler = handler
     }
     
-    public func setObserveKeepup(handler: @escaping (AVPlayer?) -> Void) {
+    public func setObserveKeepup(handler: @escaping (Bool) -> Void) {
         self.observeKeepup = handler
-    }
-    
-    func observePlayer(item: AVPlayerItem) {
-        self.activateTimer()
-        self.finishObserver = NotificationCenter.default.addObserver(self, selector: #selector(self.finishedPlaying(_:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
-    }
-    
-    func removePlayerObserver() {
-        self.timer?.cancel()
-        if let getObserver = self.finishObserver {
-            NotificationCenter.default.removeObserver(getObserver)
-            self.finishObserver = nil
-        }
     }
     
     required init?(coder: NSCoder) {
@@ -185,4 +157,39 @@ public class PlayerUIView: UIView {
         super.layoutSubviews()
         playerLayer.frame = bounds
     }
+    
+    private func activateTimer() {
+        self.timer?.cancel()
+        self.timer = DispatchSource.makeTimerSource()
+        self.timer?.schedule(deadline: .now(), repeating: 0.5)
+        self.timer?.setEventHandler(handler: {
+            if let keepUp = self.playerLayer.player?.currentItem?.isPlaybackLikelyToKeepUp, keepUp {
+                self.observeKeepup(true)
+                self.timer?.cancel()
+            } else {
+                self.observeKeepup(false)
+            }
+        })
+        self.timer?.resume()
+    }
+    
+    private func createPlayer(item: AVPlayerItem? = nil) {
+        self.playerLayer = AVPlayerLayer()
+        self.playerLayer.player = AVPlayer(playerItem: item)
+        self.layer.addSublayer(self.playerLayer)
+    }
+    
+    private func observePlayer(item: AVPlayerItem) {
+        self.activateTimer()
+        self.finishObserver = NotificationCenter.default.addObserver(self, selector: #selector(self.finishedPlaying(_:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
+    }
+    
+    private func removePlayerObserver() {
+        self.timer?.cancel()
+        if let getObserver = self.finishObserver {
+            NotificationCenter.default.removeObserver(getObserver)
+            self.finishObserver = nil
+        }
+    }
+    
 }
