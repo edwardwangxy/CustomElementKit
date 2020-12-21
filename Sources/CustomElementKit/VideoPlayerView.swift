@@ -165,7 +165,6 @@ public class PlayerUIView: UIView {
         self.timer?.setEventHandler(handler: {
             if let keepUp = self.playerLayer.player?.currentItem?.isPlaybackLikelyToKeepUp, keepUp {
                 self.observeKeepup(true)
-                self.timer?.cancel()
             } else {
                 self.observeKeepup(false)
             }
