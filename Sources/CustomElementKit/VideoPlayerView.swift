@@ -10,44 +10,14 @@ import SwiftUI
 import AVKit
 
 public struct VideoPlayerView: UIViewRepresentable {
-//    @Binding var videoURL: URL?
-//    @Binding var readyToPlay: Bool
-//    @State var needAspectFill: Bool = false
-    @Binding var play: Bool
     @State var playerUIView = PlayerUIView()
     
-    public init(playerUIView: PlayerUIView, play: Binding<Bool> = .constant(true)) {
-        self._play = play
-        self.playerUIView = playerUIView
-    }
-    
-    public init(play: Binding<Bool>, url: URL, loop: Bool = false, forceAudio: Bool = true) {
-        if forceAudio {
-            do {
-                try AVAudioSession.sharedInstance().setCategory(.playback)
-            } catch(let error) {
-                print(error.localizedDescription)
-            }
-        }
-        self._play = play
-        if loop {
-            self.playerUIView.loopVideo(url: url)
-        } else {
-            self.playerUIView.updateVideo(url: url)
-        }
-    }
-//    @State var endHandler: () -> Void = {}
-
     public func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<VideoPlayerView>) {
-        if self.play {
-            self.playerUIView.play()
-        } else {
-            self.playerUIView.pause()
-        }
+        print("video update")
     }
-    
+
     public func makeUIView(context: Context) -> UIView {
-//        self.playerUIView.updateComplete(handler: self.endHandler)
+
         return self.playerUIView
     }
 }
@@ -130,6 +100,9 @@ public class PlayerUIView: UIView {
                     print(error.localizedDescription)
                 }
                 self.playerLayer.player?.play()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.playerLayer.player?.pause()
+                }
             }
         }
     }
