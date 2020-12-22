@@ -10,7 +10,11 @@ import SwiftUI
 import AVKit
 
 public struct VideoPlayerView: UIViewRepresentable {
-    @State var playerUIView = PlayerUIView()
+    @State var playerUIView: PlayerUIView = PlayerUIView()
+    
+    public init(playerView: PlayerUIView = PlayerUIView()) {
+        self.playerUIView = playerView
+    }
     
     public func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<VideoPlayerView>) {
         print("video update")
