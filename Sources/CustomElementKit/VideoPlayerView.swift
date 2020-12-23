@@ -10,19 +10,17 @@ import SwiftUI
 import AVKit
 
 public struct VideoPlayerView: UIViewRepresentable {
-    @State var playerUIView: PlayerUIView = PlayerUIView()
+    @ObservedObject var playerUIView: PlayerUIView = PlayerUIView()
     
     public init(playerView: PlayerUIView = PlayerUIView()) {
-        print("init video player")
         self.playerUIView = playerView
     }
     
     public func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<VideoPlayerView>) {
         print("video update")
     }
-
+    
     public func makeUIView(context: Context) -> UIView {
-
         return self.playerUIView
     }
 }
@@ -39,44 +37,20 @@ public extension VideoPlayerView {
     }
 }
 
-public class PlayerUIView: UIView {
-    public var playerLayer = AVPlayerLayer()
-//    public var player: AVPlayer?
-    private var endHandler: () -> Void = {}
-    private var observeKeepup: (Bool) -> Void = {_ in}
-    var currentUrl: URL?
-    var currentObserver: Any? = nil
-    var finishObserver: Any? = nil
-    var looper: AVPlayerLooper? = nil
+public class PlayerUIView: UIView, ObservableObject {
+    public let playerLayer = AVPlayerLayer()
     
     private var timer: DispatchSourceTimer? = nil
+    private var videoCanPlay: (Bool) -> Void = {_ in}
+    private var videoComplete: () -> Void = {}
+    private var finishObserver: Any? = nil
     
-    public init() {
-        super.init(frame: .zero)
-        self.createPlayer()
-    }
+    @Published fileprivate var videoUpdate: Bool = false
     
-    public func updateGravity(mode: AVLayerVideoGravity) {
-        self.playerLayer.videoGravity = mode
-    }
-    
-    public func updateComplete(handler: @escaping () -> Void) {
-        self.endHandler = handler
-    }
-    
-    public func setObserveKeepup(handler: @escaping (Bool) -> Void) {
-        self.observeKeepup = handler
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    public func removeVideo() {
-        self.removePlayerObserver()
-        self.playerLayer.player?.pause()
-        self.playerLayer.player?.replaceCurrentItem(with: nil)
-        self.playerLayer.player = nil
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        self.playerLayer.player = AVQueuePlayer()
+        self.layer.addSublayer(self.playerLayer)
     }
     
     public func play() {
@@ -87,78 +61,62 @@ public class PlayerUIView: UIView {
         self.playerLayer.player?.pause()
     }
     
-    public func updateVideo(url: URL, play: Bool = false) {
-        if url == self.currentUrl {
-            return
-        }
-        self.currentUrl = url
+    public func updateGravity(mode: AVLayerVideoGravity) {
+        self.playerLayer.videoGravity = mode
+    }
+    
+    public func setVideoCanPlay(action: @escaping (Bool) -> Void) {
+        self.videoCanPlay = action
+    }
+    
+    public func setVideoComplete(action: @escaping () -> Void) {
+        self.videoComplete = action
+    }
+    
+    public func updateVideo(url: URL) {
         let asset = AVAsset(url: url)
         let item = AVPlayerItem(asset: asset)
-        self.playerLayer.player = AVPlayer()
         DispatchQueue.main.async {
             self.playerLayer.player?.replaceCurrentItem(with: item)
-            self.observePlayer(item: item)
-            if play {
-                do {
-                    try AVAudioSession.sharedInstance().setCategory(.playback)
-                } catch(let error) {
-                    print(error.localizedDescription)
-                }
-                self.playerLayer.player?.play()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self.playerLayer.player?.pause()
-                }
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback)
+            } catch(let error) {
+                print("audio error: \(error.localizedDescription)")
             }
         }
+        self.activateTimer()
+        self.notifyViewUpdate()
     }
     
-    public func loopVideo(url: URL) {
-        if url == self.currentUrl {
-            return
-        }
-        self.currentUrl = url
-        let asset = AVAsset(url: url)
-        let item = AVPlayerItem(asset: asset)
-        self.playerLayer.player = AVQueuePlayer(items: [item])
-        self.looper = AVPlayerLooper(player: self.playerLayer.player as! AVQueuePlayer, templateItem: item)
+    public func removeVideo() {
+        self.removePlayerObserver()
+        self.playerLayer.player?.pause()
+        self.playerLayer.player?.replaceCurrentItem(with: nil)
+        self.playerLayer.player = nil
+        self.notifyViewUpdate()
     }
     
-    @objc func finishedPlaying( _ myNotification:NSNotification) {
-        print("finish playing")
-        
-        self.endHandler()
-        self.removeVideo()
-        
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
-    
     public override func layoutSubviews() {
         super.layoutSubviews()
         playerLayer.frame = bounds
     }
     
-    private func activateTimer() {
-        self.timer?.cancel()
-        self.timer = DispatchSource.makeTimerSource()
-        self.timer?.schedule(deadline: .now(), repeating: 0.5)
-        self.timer?.setEventHandler(handler: {
-            if let keepUp = self.playerLayer.player?.currentItem?.isPlaybackLikelyToKeepUp, keepUp {
-                self.observeKeepup(true)
-            } else {
-                self.observeKeepup(false)
-            }
-        })
-        self.timer?.resume()
-    }
     
-    private func createPlayer(item: AVPlayerItem? = nil) {
-        self.playerLayer = AVPlayerLayer()
-        self.playerLayer.player = AVPlayer(playerItem: item)
-        self.layer.addSublayer(self.playerLayer)
-    }
-    
-    private func observePlayer(item: AVPlayerItem) {
+}
+
+extension PlayerUIView {
+    private func observePlayerItem(item: AVPlayerItem) {
         self.activateTimer()
         self.finishObserver = NotificationCenter.default.addObserver(self, selector: #selector(self.finishedPlaying(_:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
+    }
+    
+    @objc private func finishedPlaying( _ myNotification:NSNotification) {
+        print("finish playing")
+        self.videoComplete()
+        self.removeVideo()
     }
     
     private func removePlayerObserver() {
@@ -169,4 +127,23 @@ public class PlayerUIView: UIView {
         }
     }
     
+    private func activateTimer() {
+        self.timer?.cancel()
+        self.timer = DispatchSource.makeTimerSource()
+        self.timer?.schedule(deadline: .now(), repeating: 0.2)
+        self.timer?.setEventHandler(handler: {
+            if let keepUp = self.playerLayer.player?.currentItem?.isPlaybackLikelyToKeepUp, keepUp {
+                self.videoCanPlay(true)
+            } else {
+                self.videoCanPlay(false)
+            }
+        })
+        self.timer?.resume()
+    }
+    
+    private func notifyViewUpdate() {
+        DispatchQueue.main.async {
+            self.videoUpdate.toggle()
+        }
+    }
 }
