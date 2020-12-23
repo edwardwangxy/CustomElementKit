@@ -78,6 +78,10 @@ public class PlayerUIView: UIView, ObservableObject {
         let item = AVPlayerItem(asset: asset)
         DispatchQueue.main.async {
             self.playerLayer.player?.replaceCurrentItem(with: item)
+            self.playerLayer.player?.play()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.playerLayer.player?.pause()
+            }
             do {
                 try AVAudioSession.sharedInstance().setCategory(.playback)
             } catch(let error) {
