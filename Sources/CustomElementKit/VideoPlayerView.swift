@@ -92,7 +92,6 @@ public class PlayerUIView: UIView, ObservableObject {
         self.removePlayerObserver()
         self.playerLayer.player?.pause()
         self.playerLayer.player?.replaceCurrentItem(with: nil)
-        self.playerLayer.player = nil
         self.notifyViewUpdate()
     }
     
