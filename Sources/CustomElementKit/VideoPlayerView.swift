@@ -13,6 +13,7 @@ public struct VideoPlayerView: UIViewRepresentable {
     @State var playerUIView: PlayerUIView = PlayerUIView()
     
     public init(playerView: PlayerUIView = PlayerUIView()) {
+        print("init video player")
         self.playerUIView = playerView
     }
     
