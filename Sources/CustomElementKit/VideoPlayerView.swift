@@ -39,7 +39,7 @@ public extension VideoPlayerView {
 
 public class PlayerUIView: UIView, ObservableObject {
     public let playerLayer = AVPlayerLayer()
-    
+    private var playerLooper: AVPlayerLooper? = nil
     private var timer: DispatchSourceTimer? = nil
     private var videoCanPlay: (Bool) -> Void = {_ in}
     private var videoComplete: () -> Void = {}
@@ -51,6 +51,10 @@ public class PlayerUIView: UIView, ObservableObject {
         super.init(frame: frame)
         self.playerLayer.player = AVQueuePlayer()
         self.layer.addSublayer(self.playerLayer)
+    }
+    
+    public func mute() {
+        self.playerLayer.player?.isMuted = true
     }
     
     public func play() {
@@ -77,11 +81,30 @@ public class PlayerUIView: UIView, ObservableObject {
         let asset = AVAsset(url: url)
         let item = AVPlayerItem(asset: asset)
         DispatchQueue.main.async {
+            self.playerLooper = nil
             self.playerLayer.player?.replaceCurrentItem(with: item)
             do {
                 try AVAudioSession.sharedInstance().setCategory(.playback)
             } catch(let error) {
                 print("audio error: \(error.localizedDescription)")
+            }
+        }
+        self.activateTimer()
+        self.notifyViewUpdate()
+    }
+    
+    public func loopVideo(url: URL) {
+        let asset = AVAsset(url: url)
+        let item = AVPlayerItem(asset: asset)
+        DispatchQueue.main.async {
+            self.playerLayer.player?.replaceCurrentItem(with: item)
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback)
+            } catch(let error) {
+                print("audio error: \(error.localizedDescription)")
+            }
+            if (self.playerLayer.player as? AVQueuePlayer) != nil {
+                self.playerLooper = AVPlayerLooper(player: self.playerLayer.player as! AVQueuePlayer, templateItem: item)
             }
         }
         self.activateTimer()
