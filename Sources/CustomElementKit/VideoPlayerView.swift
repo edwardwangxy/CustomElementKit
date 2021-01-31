@@ -82,6 +82,7 @@ public class PlayerUIView: UIView, ObservableObject {
         let item = AVPlayerItem(asset: asset)
         DispatchQueue.main.async {
             self.playerLooper = nil
+            self.observePlayerItem(item: item)
             self.playerLayer.player?.replaceCurrentItem(with: item)
             do {
                 try AVAudioSession.sharedInstance().setCategory(.playback)
@@ -89,7 +90,6 @@ public class PlayerUIView: UIView, ObservableObject {
                 print("audio error: \(error.localizedDescription)")
             }
         }
-        self.activateTimer()
         self.notifyViewUpdate()
     }
     
