@@ -15,7 +15,7 @@ public enum ListScrollingHelperCatchType {
     case scroll
 }
 
-public class CustomScrollViewDelegate: NSObject, UIScrollViewDelegate, ObservableObject {
+public class ListScrollingHelperDelegate: NSObject, UIScrollViewDelegate, ObservableObject {
     @Published var currentPage: Int = 0
     private var scrollViewEndCallBack: (CGPoint) -> Void
     private let pageHeight: CGFloat
