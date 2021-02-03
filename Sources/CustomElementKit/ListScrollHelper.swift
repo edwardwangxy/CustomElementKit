@@ -15,17 +15,24 @@ public enum ListScrollingHelperCatchType {
     case scroll
 }
 
-public class ListScrollingHelperDelegate: NSObject, UIScrollViewDelegate, ObservableObject {
-    @Published var currentPage: Int = 0
-    private var scrollViewEndCallBack: (CGPoint) -> Void
-    private let pageHeight: CGFloat
-    public init(pageHeight: CGFloat = UIScreen.main.bounds.height, scrollEndCall: @escaping (CGPoint) -> Void) {
-        self.pageHeight = pageHeight
+public class ListScrollingHelperDelegate: NSObject, UIScrollViewDelegate {
+    private var scrollViewEndCallBack: (UIScrollView) -> Void = {_ in}
+    private var scrollViewBeginDragCallback: (UIScrollView) -> Void = {_ in}
+    
+    public init(scrollEndCall: @escaping (UIScrollView) -> Void = {_ in }) {
         self.scrollViewEndCallBack = scrollEndCall
     }
     
+    public func setScrollEndDecelerating(scrollEndCall: @escaping (UIScrollView) -> Void) {
+        self.scrollViewEndCallBack = scrollEndCall
+    }
+    
+    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        self.scrollViewBeginDragCallback(scrollView)
+    }
+    
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        scrollViewEndCallBack(scrollView.contentOffset)
+        scrollViewEndCallBack(scrollView)
     }
 }
 
