@@ -161,6 +161,13 @@ public class ListScrollingProxy: ObservableObject {
         }
     }
     
+    public func scrollViewToPage(pageNum: Int, pageHeight: CGFloat, animate: Bool = true) {
+        if let getScroll = self.scrollView {
+            let bottomOffset = CGPoint(x: 0, y: pageHeight * CGFloat(pageNum))
+            getScroll.setContentOffset(bottomOffset, animated: animate)
+        }
+    }
+    
     public func scrollTableToEnd(animate: Bool = true) {
         if let getTable = self.tableView {
             let lastIndex = IndexPath(row: getTable.numberOfRows(inSection: 0) - 1, section: 0)
