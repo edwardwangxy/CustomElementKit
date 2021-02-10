@@ -35,15 +35,6 @@ public struct CustomPickerView: UIViewRepresentable {
         let picker = UIPickerView(frame: .zero)
         picker.dataSource = context.coordinator
         picker.delegate = context.coordinator
-        let pickerFrame = picker.subviews[1].bounds
-        let newFrame = CGRect(x: 0, y: (self.rowHeight - self.selectorHeight) / 4, width: pickerFrame.width, height: self.selectorHeight)
-        let mask = CAShapeLayer()
-        // Set its frame to the view bounds
-        mask.frame = newFrame
-        // Build its path with a smoothed shape
-        mask.path = UIBezierPath(roundedRect: newFrame, cornerRadius: self.cornerRadius).cgPath
-        // Apply the mask to the view
-        picker.subviews[1].layer.mask = mask
         return picker
     }
 
@@ -67,7 +58,19 @@ public struct CustomPickerView: UIViewRepresentable {
         }
         
         public func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-            pickerView.subviews[1].backgroundColor = UIColor.red
+            
+            if pickerView.subviews.count >= 2 {
+                let pickerFrame = pickerView.subviews[1].bounds
+                let newFrame = CGRect(x: 0, y: (self.parent.rowHeight - self.parent.selectorHeight) / 4, width: pickerFrame.width, height: self.parent.selectorHeight)
+                let mask = CAShapeLayer()
+                // Set its frame to the view bounds
+                mask.frame = newFrame
+                // Build its path with a smoothed shape
+                mask.path = UIBezierPath(roundedRect: newFrame, cornerRadius: self.parent.cornerRadius).cgPath
+                // Apply the mask to the view
+                pickerView.subviews[1].layer.mask = mask
+            }
+            
             var pickerLabel: UILabel? = (view as? UILabel)
             if pickerLabel == nil {
                 pickerLabel = UILabel()
