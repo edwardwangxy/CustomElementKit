@@ -13,13 +13,17 @@ public struct CustomPickerView: UIViewRepresentable {
     var textColor: UIColor = UIColor.black
     var textFont: UIFont = UIFont.systemFont(ofSize: 20)
     var rowHeight: CGFloat = 40
+    var selectorHeight: CGFloat = 40
+    var cornerRadius: CGFloat = 20
     
-    public init(data: [[String]], selections: Binding<Int>, font: UIFont = UIFont.systemFont(ofSize: 20), textColor: UIColor = UIColor.black, rowHeight: CGFloat = 40) {
+    public init(data: [[String]], selections: Binding<Int>, font: UIFont = UIFont.systemFont(ofSize: 20), textColor: UIColor = UIColor.black, rowHeight: CGFloat = 40, selectorHeight: CGFloat = 40, cornerRadius: CGFloat = 20) {
         self.data = data
         self._selections = selections
         self.textFont = font
         self.textColor = textColor
         self.rowHeight = rowHeight
+        self.selectorHeight = selectorHeight
+        self.cornerRadius = cornerRadius
     }
     //makeCoordinator()
     public func makeCoordinator() -> CustomPickerView.Coordinator {
@@ -31,7 +35,15 @@ public struct CustomPickerView: UIViewRepresentable {
         let picker = UIPickerView(frame: .zero)
         picker.dataSource = context.coordinator
         picker.delegate = context.coordinator
-
+        let pickerFrame = picker.subviews[1].bounds
+        let newFrame = CGRect(x: 0, y: (self.rowHeight - self.selectorHeight) / 4, width: pickerFrame.width, height: self.selectorHeight)
+        let mask = CAShapeLayer()
+        // Set its frame to the view bounds
+        mask.frame = newFrame
+        // Build its path with a smoothed shape
+        mask.path = UIBezierPath(roundedRect: newFrame, cornerRadius: self.cornerRadius).cgPath
+        // Apply the mask to the view
+        picker.subviews[1].layer.mask = mask
         return picker
     }
 
@@ -55,6 +67,7 @@ public struct CustomPickerView: UIViewRepresentable {
         }
         
         public func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
+            pickerView.subviews[1].backgroundColor = UIColor.red
             var pickerLabel: UILabel? = (view as? UILabel)
             if pickerLabel == nil {
                 pickerLabel = UILabel()
@@ -84,12 +97,9 @@ public struct CustomPickerView: UIViewRepresentable {
 
         //pickerView(_:didSelectRow:inComponent:)
         public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-     //       self.parent.selections[component] = row
+            self.parent.selections = row
         }
     }
 }
-struct CustomPickerView_Previews: PreviewProvider {
-    static var previews: some View {
-        CustomPickerView(data: [["test", "test2", "test2", "test2", "test2"]], selections: .constant(0), font: UIFont.systemFont(ofSize: 25, weight: .regular), textColor: UIColor.red)
-    }
-}
+
+
