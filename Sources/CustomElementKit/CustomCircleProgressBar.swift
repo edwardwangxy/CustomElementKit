@@ -9,11 +9,11 @@ import SwiftUI
 
 public struct CustomCircleProgressBar: View {
     @Binding var progress: Double
-    @State var lineWidth: CGFloat = 10
-    @State var color: Color = Color.red
-    @State var needPercent: Bool = false
-    @State var textFont: Font = Font.system(size: 10, weight: .bold, design: .rounded)
-    @State var textColor: Color = Color.black
+    var lineWidth: CGFloat
+    var color: Color
+    var needPercent: Bool
+    var textFont: Font
+    var textColor: Color
     
     public init(progress: Binding<Double>, lineWidth: CGFloat = 10, color: Color = Color.red, needPercent: Bool = false, textFont: Font = Font.system(size: 10, weight: .bold, design: .rounded), textColor: Color = Color.black) {
         self._progress = progress
