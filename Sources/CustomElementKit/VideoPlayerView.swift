@@ -77,7 +77,7 @@ public class PlayerUIView: UIView, ObservableObject {
         self.videoComplete = action
     }
     
-    public func updateVideo(url: URL) {
+    public func updateVideo(url: URL, setCategory: AVAudioSession.Category = .playback) {
         let asset = AVAsset(url: url)
         let item = AVPlayerItem(asset: asset)
         DispatchQueue.main.async {
@@ -85,7 +85,8 @@ public class PlayerUIView: UIView, ObservableObject {
             self.observePlayerItem(item: item)
             self.playerLayer.player?.replaceCurrentItem(with: item)
             do {
-                try AVAudioSession.sharedInstance().setCategory(.playback)
+                try AVAudioSession.sharedInstance().setCategory(setCategory)
+                try AVAudioSession.sharedInstance().setActive(true)
             } catch(let error) {
                 print("audio error: \(error.localizedDescription)")
             }
@@ -93,13 +94,14 @@ public class PlayerUIView: UIView, ObservableObject {
         self.notifyViewUpdate()
     }
     
-    public func loopVideo(url: URL) {
+    public func loopVideo(url: URL, setCategory: AVAudioSession.Category = .playback) {
         let asset = AVAsset(url: url)
         let item = AVPlayerItem(asset: asset)
         DispatchQueue.main.async {
             self.playerLayer.player?.replaceCurrentItem(with: item)
             do {
-                try AVAudioSession.sharedInstance().setCategory(.playback)
+                try AVAudioSession.sharedInstance().setCategory(setCategory)
+                try AVAudioSession.sharedInstance().setActive(true)
             } catch(let error) {
                 print("audio error: \(error.localizedDescription)")
             }
