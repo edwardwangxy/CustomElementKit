@@ -10,10 +10,16 @@ import SwiftUI
 public struct CustomPageControl: UIViewRepresentable {
     @Binding var numberOfPages: Int
     @Binding var currentPage: Int
-
-    public init(numberOfPages: Binding<Int>, currentPage: Binding<Int>) {
+    var indicatorColor: UIColor? = nil
+    var currentIndicatorColor: UIColor? = nil
+    
+    let control = UIPageControl()
+    
+    public init(numberOfPages: Binding<Int>, currentPage: Binding<Int>, indicatorColor: UIColor? = nil, currentIndicatorColor: UIColor? = nil) {
         self._numberOfPages = numberOfPages
         self._currentPage = currentPage
+        self.indicatorColor = indicatorColor
+        self.currentIndicatorColor = currentIndicatorColor
     }
     
     public func makeCoordinator() -> Coordinator {
@@ -21,13 +27,14 @@ public struct CustomPageControl: UIViewRepresentable {
     }
     
     public func makeUIView(context: Context) -> UIPageControl {
-        let control = UIPageControl()
-        control.numberOfPages = numberOfPages
-        control.addTarget(
+        self.control.numberOfPages = numberOfPages
+        self.control.addTarget(
                     context.coordinator,
                     action: #selector(Coordinator.updateCurrentPage(sender:)),
                     for: .valueChanged)
-        return control
+        self.control.pageIndicatorTintColor = self.indicatorColor
+        self.control.currentPageIndicatorTintColor = self.currentIndicatorColor
+        return self.control
     }
 
     public func updateUIView(_ uiView: UIPageControl, context: Context) {
