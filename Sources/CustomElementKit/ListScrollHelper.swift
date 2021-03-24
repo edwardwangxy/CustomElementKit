@@ -39,7 +39,7 @@ public class ListScrollingHelperDelegate: NSObject, UIScrollViewDelegate {
 public struct ListScrollingHelper: UIViewRepresentable {
     var catchType: ListScrollingHelperCatchType
     var forcePage: Bool = false
-    @Binding public var proxy: ListScrollingProxy // reference type
+    @ObservedObject public var proxy: ListScrollingProxy // reference type
     @Binding public var reCatch: Bool
     private var setView = UIView()
     public func forceUpdate() {
@@ -50,10 +50,10 @@ public struct ListScrollingHelper: UIViewRepresentable {
         }
     }
     
-    public init(catchType: ListScrollingHelperCatchType, forcePage: Bool = false, proxy: Binding<ListScrollingProxy>, reCatch: Binding<Bool>) {
+    public init(catchType: ListScrollingHelperCatchType, forcePage: Bool = false, proxy: ListScrollingProxy, reCatch: Binding<Bool>) {
         self.catchType = catchType
         self.forcePage = forcePage
-        self._proxy = proxy
+        self.proxy = proxy
         self._reCatch = reCatch
     }
     
