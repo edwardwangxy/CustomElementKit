@@ -63,6 +63,7 @@ public struct CustomTextView: UIViewRepresentable {
         }
         if self.dynamicResponder {
             if !isFirstResponder {
+                print("resign")
                 uiView.resignFirstResponder()
                 context.coordinator.didBecomeFirstResponder = false
             }
