@@ -38,7 +38,7 @@ public struct CustomTextView: UIViewRepresentable {
     
     @Binding public var text: String
     @Binding public var acceptOnlyInteger: Bool
-    @State public var dynamicResponder: Bool = false
+    public var dynamicResponder: Bool
     @Binding public var isFirstResponder: Bool
     public var textField: CustomUITextView = CustomUITextView(frame: .zero)
     
