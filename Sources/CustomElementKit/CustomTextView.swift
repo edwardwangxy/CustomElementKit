@@ -61,14 +61,12 @@ public struct CustomTextView: UIViewRepresentable {
 
     public func updateUIView(_ uiView: CustomUITextView, context: UIViewRepresentableContext<CustomTextView>) {
         uiView.text = text
-        print("view update: \(self.isFirstResponder), \(context.coordinator.didBecomeFirstResponder)")
         if isFirstResponder && !context.coordinator.didBecomeFirstResponder  {
             uiView.becomeFirstResponder()
             context.coordinator.didBecomeFirstResponder = true
         }
         if self.dynamicResponder {
             if !isFirstResponder {
-                print("resign")
                 uiView.resignFirstResponder()
                 context.coordinator.didBecomeFirstResponder = false
             }
