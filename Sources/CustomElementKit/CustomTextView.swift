@@ -29,6 +29,10 @@ public struct CustomTextView: UIViewRepresentable {
             }
             
         }
+        
+        public func textViewDidBeginEditing(_ textView: UITextView) {
+            self.didBecomeFirstResponder = true
+        }
 
     }
     

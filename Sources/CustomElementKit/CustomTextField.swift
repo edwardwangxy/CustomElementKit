@@ -37,6 +37,10 @@ public struct CustomTextField: UIViewRepresentable {
                 return true
             }
         }
+        
+        public func textFieldDidBeginEditing(_ textField: UITextField) {
+            self.didBecomeFirstResponder = true
+        }
 
         
     }
