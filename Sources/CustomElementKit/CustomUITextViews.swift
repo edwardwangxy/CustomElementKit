@@ -9,6 +9,16 @@ import UIKit
 
 public class CustomUITextField: UITextField {
     public var actionType = TextFieldCanPerformAction()
+    private var deleteAction: (String?) -> Void = {_ in}
+    
+    public func setDeleteAction(action: @escaping (String?) -> Void) {
+        self.deleteAction = action
+    }
+    
+    public override func deleteBackward() {
+        self.deleteAction(self.text)
+        super.deleteBackward()
+    }
     
     public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         if UIPasteboard.general.string != nil {
