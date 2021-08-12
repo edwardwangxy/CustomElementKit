@@ -40,13 +40,14 @@ public struct CustomTextView: UIViewRepresentable {
     @Binding public var acceptOnlyInteger: Bool
     public var dynamicResponder: Bool
     @Binding public var isFirstResponder: Bool
-    public var textField: CustomUITextView = CustomUITextView(frame: .zero)
+    public var textField: CustomUITextView
     
-    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>) {
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, textView: CustomUITextView = CustomUITextView(frame: .zero)) {
         self._text = text
         self._acceptOnlyInteger = acceptOnlyInteger
         self._isFirstResponder = isFirstResponder
         self.dynamicResponder = dynamicResponder
+        self.textField = textView
     }
     
     public func makeUIView(context: UIViewRepresentableContext<CustomTextView>) -> CustomUITextView {
