@@ -12,12 +12,13 @@ import Foundation
 public struct CustomTextView: UIViewRepresentable {
 
     public class Coordinator: NSObject, UITextViewDelegate {
-
+        private let parent: CustomTextView
         @Binding public var text: String
         public var didBecomeFirstResponder = false
 
-        public init(text: Binding<String>) {
+        public init(parent: CustomTextView, text: Binding<String>) {
             _text = text
+            self.parent = parent
         }
 
         public func textViewDidChange(_ textView: UITextView) {
@@ -33,6 +34,10 @@ public struct CustomTextView: UIViewRepresentable {
         public func textViewDidBeginEditing(_ textView: UITextView) {
             self.didBecomeFirstResponder = true
         }
+        
+        public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+            return self.parent.setTextViewShouldChangeChar(textView, range, text)
+        }
 
     }
     
@@ -41,6 +46,7 @@ public struct CustomTextView: UIViewRepresentable {
     public var dynamicResponder: Bool
     @Binding public var isFirstResponder: Bool
     public var textField: CustomUITextView
+    public var setTextViewShouldChangeChar: (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}
     
     public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, textView: CustomUITextView = CustomUITextView(frame: .zero)) {
         self._text = text
@@ -57,7 +63,7 @@ public struct CustomTextView: UIViewRepresentable {
     }
 
     public func makeCoordinator() -> CustomTextView.Coordinator {
-        return Coordinator(text: self.$text)
+        return Coordinator(parent: self, text: self.$text)
     }
 
     public func updateUIView(_ uiView: CustomUITextView, context: UIViewRepresentableContext<CustomTextView>) {
@@ -118,6 +124,11 @@ public extension CustomTextView {
     
     func isUserInterationEnable(_ set: Bool) -> CustomTextView {
         self.textField.isUserInteractionEnabled = set
+        return self
+    }
+    
+    mutating func setShouldChangeChar(_ set: @escaping (UITextView, NSRange, String) -> Bool) -> CustomTextView {
+        self.setTextViewShouldChangeChar = set
         return self
     }
     
