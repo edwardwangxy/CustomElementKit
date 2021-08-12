@@ -46,7 +46,7 @@ public struct CustomTextView: UIViewRepresentable {
     public var dynamicResponder: Bool
     @Binding public var isFirstResponder: Bool
     public var textField: CustomUITextView
-    public var setTextViewShouldChangeChar: (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}
+    @State public var setTextViewShouldChangeChar: (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}
     
     public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, textView: CustomUITextView = CustomUITextView(frame: .zero)) {
         self._text = text
@@ -127,7 +127,7 @@ public extension CustomTextView {
         return self
     }
     
-    mutating func setShouldChangeChar(_ set: @escaping (UITextView, NSRange, String) -> Bool) -> CustomTextView {
+    func setShouldChangeChar(_ set: @escaping (UITextView, NSRange, String) -> Bool) -> CustomTextView {
         self.setTextViewShouldChangeChar = set
         return self
     }
