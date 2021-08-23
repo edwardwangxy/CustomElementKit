@@ -14,16 +14,20 @@ public struct CustomDocumentPicker: UIViewControllerRepresentable {
     let showFileExtension: Bool
     let allowMultipleSelection: Bool
     let documentType: [String]
+    let documentMode: UIDocumentPickerMode
     let complete: () -> Void
+    let picker: UIDocumentPickerViewController
     @Binding var files: [URL]
     @Environment(\.presentationMode) var presentation
     
-    public init(files: Binding<[URL]>, fileType: [String], showFileExtension: Bool = true, allowMultipleSelection: Bool = false, complete: @escaping () -> Void = {}) {
+    public init(files: Binding<[URL]>, fileType: [String], showFileExtension: Bool = true, allowMultipleSelection: Bool = false, mode: UIDocumentPickerMode = .import, complete: @escaping () -> Void = {}) {
         self.showFileExtension = showFileExtension
         self.allowMultipleSelection = allowMultipleSelection
         self.documentType = fileType
         self.complete = complete
         self._files = files
+        self.documentMode = mode
+        self.picker = UIDocumentPickerViewController(documentTypes: self.documentType, in: self.documentMode)
     }
 
     public class Coordinator: NSObject, UIDocumentPickerDelegate {
@@ -51,15 +55,19 @@ public struct CustomDocumentPicker: UIViewControllerRepresentable {
     }
 
     public func makeUIViewController(context: UIViewControllerRepresentableContext<CustomDocumentPicker>) -> UIDocumentPickerViewController {
-        let picker = UIDocumentPickerViewController(documentTypes: self.documentType, in: .import)
-        picker.delegate = context.coordinator
-        picker.shouldShowFileExtensions = self.showFileExtension
-        picker.allowsMultipleSelection = self.allowMultipleSelection
-        return picker
+        self.picker.delegate = context.coordinator
+        self.picker.shouldShowFileExtensions = self.showFileExtension
+        self.picker.allowsMultipleSelection = self.allowMultipleSelection
+        return self.picker
     }
 
     public func updateUIViewController(_ uiViewController: UIDocumentPickerViewController,
                                 context: UIViewControllerRepresentableContext<CustomDocumentPicker>) {
         uiViewController.allowsMultipleSelection = self.allowMultipleSelection
+    }
+    
+    public func customize(action: @escaping (UIDocumentPickerViewController) -> Void) -> CustomDocumentPicker {
+        action(self.picker)
+        return self
     }
 }
