@@ -15,7 +15,7 @@ public final class Keyboard: ObservableObject {
     public static var shared = Keyboard()
     
     // MARK: - Published Properties
-    @Published var state: Keyboard.State = .default
+    @Published public var state: Keyboard.State = .default
     
     // MARK: - Private Properties
     private var cancellables: Set<AnyCancellable> = []
