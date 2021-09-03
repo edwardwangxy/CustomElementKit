@@ -11,14 +11,15 @@ import UIKit
 public struct CustomTextField: UIViewRepresentable {
     
     public class Coordinator: NSObject, UITextFieldDelegate {
-
+        private var parent: CustomTextField
         @Binding public var text: String
         @Binding public var integerOnly: Bool
         public var didBecomeFirstResponder = false
 
-        public init(text: Binding<String>, onlyInteger: Binding<Bool>) {
+        public init(parent: CustomTextField, text: Binding<String>, onlyInteger: Binding<Bool>) {
             _text = text
             _integerOnly = onlyInteger
+            self.parent = parent
         }
 
         public func textFieldDidChangeSelection(_ textField: UITextField) {
@@ -34,7 +35,7 @@ public struct CustomTextField: UIViewRepresentable {
                 let numberFiltered = compSepByCharInSet.joined(separator: "")
                 return string == numberFiltered
             } else {
-                return true
+                return (self.parent.shouldChangeCharactersIn?(textField, range, string)) ?? true
             }
         }
         
@@ -51,6 +52,7 @@ public struct CustomTextField: UIViewRepresentable {
     @Binding public var isSecureTextEntry: Bool
     @Binding public var isFirstResponder: Bool
     public var textField: CustomUITextField = CustomUITextField(frame: .zero)
+    private var shouldChangeCharactersIn: ((UITextField, NSRange, String) -> Bool)?
     
     public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isSecureTextEntry: Binding<Bool>, isFirstResponder: Binding<Bool>, textField: CustomUITextField = CustomUITextField(frame: .zero)) {
         self._text = text
@@ -68,7 +70,7 @@ public struct CustomTextField: UIViewRepresentable {
     }
 
     public func makeCoordinator() -> CustomTextField.Coordinator {
-        return Coordinator(text: $text, onlyInteger: self.$acceptOnlyInteger)
+        return Coordinator(parent: self, text: $text, onlyInteger: self.$acceptOnlyInteger)
     }
 
     public func updateUIView(_ uiView: CustomUITextField, context: UIViewRepresentableContext<CustomTextField>) {
@@ -153,6 +155,11 @@ public extension CustomTextField {
     
     func isUserInterationEnable(_ set: Bool) -> CustomTextField {
         self.textField.isUserInteractionEnabled = set
+        return self
+    }
+    
+    mutating func setShouldChangeCharactersInRange(_ set: @escaping (UITextField, NSRange, String) -> Bool) -> CustomTextField {
+        self.shouldChangeCharactersIn = set
         return self
     }
     
