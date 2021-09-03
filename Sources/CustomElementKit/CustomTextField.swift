@@ -54,13 +54,14 @@ public struct CustomTextField: UIViewRepresentable {
     public var textField: CustomUITextField = CustomUITextField(frame: .zero)
     private var shouldChangeCharactersIn: ((UITextField, NSRange, String) -> Bool)?
     
-    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isSecureTextEntry: Binding<Bool>, isFirstResponder: Binding<Bool>, textField: CustomUITextField = CustomUITextField(frame: .zero)) {
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isSecureTextEntry: Binding<Bool>, isFirstResponder: Binding<Bool>, shouldChangeCharactersIn: ((UITextField, NSRange, String) -> Bool)? = nil, textField: CustomUITextField = CustomUITextField(frame: .zero)) {
         self._text = text
         self._acceptOnlyInteger = acceptOnlyInteger
         self.dynamicResponder = dynamicResponder
         self._isSecureTextEntry = isSecureTextEntry
         self._isFirstResponder = isFirstResponder
         self.textField = textField
+        self.shouldChangeCharactersIn = shouldChangeCharactersIn
     }
     
     public func makeUIView(context: UIViewRepresentableContext<CustomTextField>) -> CustomUITextField {
@@ -157,10 +158,4 @@ public extension CustomTextField {
         self.textField.isUserInteractionEnabled = set
         return self
     }
-    
-    mutating func setShouldChangeCharactersInRange(_ set: @escaping (UITextField, NSRange, String) -> Bool) -> CustomTextField {
-        self.shouldChangeCharactersIn = set
-        return self
-    }
-    
 }
