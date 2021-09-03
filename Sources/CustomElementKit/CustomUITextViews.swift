@@ -7,7 +7,7 @@
 
 import UIKit
 
-public class CustomUITextField: UITextField {
+open class CustomUITextField: UITextField {
     public var actionType = TextFieldCanPerformAction()
     private var deleteAction: (String?) -> Void = {_ in}
     
@@ -36,7 +36,7 @@ public class CustomUITextField: UITextField {
     }
 }
 
-public class CustomUITextView: UITextView {
+open class CustomUITextView: UITextView {
     public var actionType = TextFieldCanPerformAction()
     
     public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
