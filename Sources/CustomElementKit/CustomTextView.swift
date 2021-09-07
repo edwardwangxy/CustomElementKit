@@ -11,7 +11,7 @@ import Foundation
 
 public struct CustomTextView: UIViewRepresentable {
 
-    public class Coordinator: NSObject, UITextViewDelegate {
+    public class Coordinator: NSObject, UITextViewDelegate, NSLayoutManagerDelegate {
         private let parent: CustomTextView
         @Binding public var text: String
         public var didBecomeFirstResponder = false
@@ -20,21 +20,25 @@ public struct CustomTextView: UIViewRepresentable {
             _text = text
             self.parent = parent
         }
+        
+        public func layoutManager(_ layoutManager: NSLayoutManager, paragraphSpacingAfterGlyphAt glyphIndex: Int, withProposedLineFragmentRect rect: CGRect) -> CGFloat {
+            return self.parent.lineSpacing
+        }
 
         public func textViewDidChange(_ textView: UITextView) {
             DispatchQueue.main.async {
                 if textView.markedTextRange == nil || self.text == "" {
                     self.text = textView.text
                 }
-                
+
             }
-            
+
         }
         
         public func textViewDidBeginEditing(_ textView: UITextView) {
             self.didBecomeFirstResponder = true
         }
-        
+
         public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
             return self.parent.setTextViewShouldChangeChar(textView, range, text)
         }
@@ -47,18 +51,20 @@ public struct CustomTextView: UIViewRepresentable {
     @Binding public var isFirstResponder: Bool
     public var textField: CustomUITextView
     public var setTextViewShouldChangeChar: (UITextView, NSRange, String) -> Bool
-    
-    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, textView: CustomUITextView = CustomUITextView(frame: .zero), setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}) {
+    public var lineSpacing: CGFloat
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, lineSpacing: CGFloat = 2, textView: CustomUITextView = CustomUITextView(frame: .zero), setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}) {
         self._text = text
         self._acceptOnlyInteger = acceptOnlyInteger
         self._isFirstResponder = isFirstResponder
         self.dynamicResponder = dynamicResponder
         self.textField = textView
         self.setTextViewShouldChangeChar = setShouldChangeChar
+        self.lineSpacing = lineSpacing
     }
     
     public func makeUIView(context: UIViewRepresentableContext<CustomTextView>) -> CustomUITextView {
         self.textField.delegate = context.coordinator
+        self.textField.layoutManager.delegate = context.coordinator
 //        self.textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return textField
     }
@@ -68,7 +74,9 @@ public struct CustomTextView: UIViewRepresentable {
     }
 
     public func updateUIView(_ uiView: CustomUITextView, context: UIViewRepresentableContext<CustomTextView>) {
-        uiView.text = text
+        if uiView.text != self.text {
+            uiView.text = text
+        }
         if isFirstResponder && !context.coordinator.didBecomeFirstResponder  {
             uiView.becomeFirstResponder()
             context.coordinator.didBecomeFirstResponder = true
