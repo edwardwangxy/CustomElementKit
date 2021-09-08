@@ -10,6 +10,24 @@ import UIKit
 open class CustomUITextField: UITextField {
     public var actionType = TextFieldCanPerformAction()
     private var deleteAction: (String?) -> Void = {_ in}
+    private var actions: [Selector] = []
+    
+    convenience public init(canPerformActions: [Selector]) {
+        self.init()
+        self.actions = canPerformActions
+    }
+    
+    override public init(frame: CGRect = .zero) {
+        super.init(frame: frame)
+    }
+    
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+    
+    open override func encode(with coder: NSCoder) {
+        super.encode(with: coder)
+    }
     
     public func setDeleteAction(action: @escaping (String?) -> Void) {
         self.deleteAction = action
@@ -21,49 +39,62 @@ open class CustomUITextField: UITextField {
     }
     
     public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-        if UIPasteboard.general.string != nil {
-            if action == actionType.paste {
+        if self.actions.count == 0 {
+            return true
+        } else {
+            if self.actions.contains(action) {
                 return true
+            } else {
+                return false
             }
         }
-        if (self.text?.count ?? 0) > 0 {
-            if action == actionType.selectAll || action == actionType.select {
-                return true
-            }
-        }
-        
-        return false
     }
 }
 
 open class CustomUITextView: UITextView {
     public var actionType = TextFieldCanPerformAction()
+    private var actions: [Selector] = []
+    
+    convenience public init(canPerformActions: [Selector]) {
+        self.init()
+        self.actions = canPerformActions
+    }
+    
+    override public init(frame: CGRect = .zero, textContainer: NSTextContainer? = nil) {
+        super.init(frame: frame, textContainer: textContainer)
+    }
+    
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+    
+    open override func encode(with coder: NSCoder) {
+        super.encode(with: coder)
+    }
     
     public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-        if UIPasteboard.general.string != nil {
-            if action == actionType.paste {
+        if self.actions.count == 0 {
+            return true
+        } else {
+            if self.actions.contains(action) {
                 return true
+            } else {
+                return false
             }
         }
-        if (self.text?.count ?? 0) > 0 {
-            if action == actionType.selectAll || action == actionType.select {
-                return true
-            }
-        }
-        return false
     }
 }
 
 
 
 public struct TextFieldCanPerformAction {
-    public var paste = #selector(UIResponderStandardEditActions.paste(_:))
-    public var cut = #selector(UIResponderStandardEditActions.cut(_:))
-    public var copy = #selector(UIResponderStandardEditActions.copy(_:))
-    public var select = #selector(UIResponderStandardEditActions.select(_:))
-    public var selectAll = #selector(UIResponderStandardEditActions.selectAll(_:))
+    public static var paste = #selector(UIResponderStandardEditActions.paste(_:))
+    public static var cut = #selector(UIResponderStandardEditActions.cut(_:))
+    public static var copy = #selector(UIResponderStandardEditActions.copy(_:))
+    public static var select = #selector(UIResponderStandardEditActions.select(_:))
+    public static var selectAll = #selector(UIResponderStandardEditActions.selectAll(_:))
 
-    public func onlyAllowAbove(action: Selector) -> Bool {
+    public static func onlyAllowAbove(action: Selector) -> Bool {
         switch action {
         case self.paste:
             return true
