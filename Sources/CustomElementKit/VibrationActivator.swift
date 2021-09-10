@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import AVKit
 
-enum Vibration {
+public enum Vibration {
     case error
     case success
     case warning
