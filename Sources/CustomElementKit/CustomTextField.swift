@@ -112,6 +112,12 @@ public extension CustomTextField {
         return view
     }
     
+    func placeholder(_ attributed: NSAttributedString) -> CustomTextField {
+        let view = self
+        view.textField.attributedPlaceholder = attributed
+        return view
+    }
+    
     func textColor(_ setColor: UIColor) -> CustomTextField {
         let view = self
         view.textField.textColor = setColor

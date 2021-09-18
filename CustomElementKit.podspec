@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name         = "CustomElementKit"
-    s.version      = "1.1.31"
+    s.version      = "1.1.32"
     s.summary      = "SwiftUI Custom Elements"
     s.description  = <<-DESC
     FAT Theme Maker SwiftUI Custom Elements
@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
     s.author             = { "FAT LLC" => "contact@fatapp.io" }
     s.source             = { :git => 'https://gitlab.com/fat-llc/CustomElementKit.git', :tag => "#{s.version}" }
     s.swift_version      = "5.3"
-    s.source_files = 'Sources/**/*'
+    s.source_files = 'Sources/CustomElementKit/**/*'
     s.ios.deployment_target  = '13.0'
 end
 
