@@ -24,7 +24,9 @@ public struct CustomTextField: UIViewRepresentable {
 
         public func textFieldDidChangeSelection(_ textField: UITextField) {
             if textField.markedTextRange == nil || self.text == "" {
-                text = textField.text ?? ""
+                DispatchQueue.main.async {
+                    self.text = textField.text ?? ""
+                }
             }
         }
         
