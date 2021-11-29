@@ -7,20 +7,20 @@
 
 import SwiftUI
 
-struct CustomRingProgress: View {
+public struct CustomRingProgress: View {
     let lineWidth: CGFloat
     let backgroundColor: Color
     let foregroundColor: Color
     @Binding var completePercent: Double
     
-    init(percent: Binding<Double>, lineWidth: CGFloat, backgroundColor: Color, foregroundColor: Color) {
+    public init(percent: Binding<Double>, lineWidth: CGFloat, backgroundColor: Color, foregroundColor: Color) {
         self._completePercent = percent
         self.lineWidth = lineWidth
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
     }
     
-    var body: some View {
+    public var body: some View {
         ZStack {
             Circle()
                 .stroke(self.backgroundColor, lineWidth: self.lineWidth)
