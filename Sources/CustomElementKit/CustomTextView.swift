@@ -30,9 +30,8 @@ public struct CustomTextView: UIViewRepresentable {
                 if textView.markedTextRange == nil || self.text == "" {
                     self.text = textView.text
                 }
-
             }
-
+            self.parent.textEditing?(textView)
         }
         
         public func textViewDidBeginEditing(_ textView: UITextView) {
@@ -52,7 +51,9 @@ public struct CustomTextView: UIViewRepresentable {
     public var textField: CustomUITextView
     public var setTextViewShouldChangeChar: (UITextView, NSRange, String) -> Bool
     public var lineSpacing: CGFloat
-    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, lineSpacing: CGFloat = 2, textView: CustomUITextView = CustomUITextView(frame: .zero), setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}) {
+    private var textEditing: ((UITextView) -> Void)?
+    
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, lineSpacing: CGFloat = 2, textView: CustomUITextView = CustomUITextView(frame: .zero), setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}, textEditing: ((UITextView) -> Void)? = nil) {
         self._text = text
         self._acceptOnlyInteger = acceptOnlyInteger
         self._isFirstResponder = isFirstResponder
@@ -60,6 +61,7 @@ public struct CustomTextView: UIViewRepresentable {
         self.textField = textView
         self.setTextViewShouldChangeChar = setShouldChangeChar
         self.lineSpacing = lineSpacing
+        self.textEditing = textEditing
     }
     
     public func makeUIView(context: UIViewRepresentableContext<CustomTextView>) -> CustomUITextView {

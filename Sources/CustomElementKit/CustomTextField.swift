@@ -28,6 +28,7 @@ public struct CustomTextField: UIViewRepresentable {
                     self.text = textField.text ?? ""
                 }
             }
+            self.parent.textEditing?(textField)
         }
         
         public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
@@ -55,8 +56,9 @@ public struct CustomTextField: UIViewRepresentable {
     @Binding public var isFirstResponder: Bool
     public var textField: CustomUITextField = CustomUITextField(frame: .zero)
     private var shouldChangeCharactersIn: ((UITextField, NSRange, String) -> Bool)?
+    private var textEditing: ((UITextField) -> Void)?
     
-    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isSecureTextEntry: Binding<Bool>, isFirstResponder: Binding<Bool>, shouldChangeCharactersIn: ((UITextField, NSRange, String) -> Bool)? = nil, textField: CustomUITextField = CustomUITextField(frame: .zero)) {
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isSecureTextEntry: Binding<Bool>, isFirstResponder: Binding<Bool>, shouldChangeCharactersIn: ((UITextField, NSRange, String) -> Bool)? = nil, textEditing: ((UITextField) -> Void)? = nil, textField: CustomUITextField = CustomUITextField(frame: .zero)) {
         self._text = text
         self._acceptOnlyInteger = acceptOnlyInteger
         self.dynamicResponder = dynamicResponder
@@ -64,6 +66,7 @@ public struct CustomTextField: UIViewRepresentable {
         self._isFirstResponder = isFirstResponder
         self.textField = textField
         self.shouldChangeCharactersIn = shouldChangeCharactersIn
+        self.textEditing = textEditing
     }
     
     public func makeUIView(context: UIViewRepresentableContext<CustomTextField>) -> CustomUITextField {
