@@ -20,7 +20,7 @@ public struct CustomScrollView<Content: View>: View {
     let offsetChange: (CGFloat) -> Void
     let spaceName: String = UUID().uuidString
     
-    public init(axes: Axis.Set = .vertical, showsIndicators: Bool = false, offsetChange: @escaping (CGFloat) -> Void, content: () -> Content) {
+    public init(_ axes: Axis.Set = .vertical, showsIndicators: Bool = false, offsetChange: @escaping (CGFloat) -> Void = {_ in}, content: () -> Content) {
         self.axes = axes
         self.showsIndicators = showsIndicators
         self.content = content()
