@@ -12,7 +12,7 @@ public extension View {
     func customSheet<Content: View>(isPresented: Binding<Bool>, animated: Bool = true, canDragDismiss: Bool = true, style: UIModalPresentationStyle = .automatic, transition: UIModalTransitionStyle = .coverVertical, attemptDismiss: (() -> Void)? = nil, presentComplete: (() -> Void)? = nil, dismissComplete: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content) -> some View {
         return self
             .background(
-                CustomSheet(content: content(), animated: animated, canDragDismiss: canDragDismiss, style: style, transition: transition, attemptDismiss: attemptDismiss, presentComplete: presentComplete, dismissComplete: dismissComplete, isPresented: isPresented)
+                CustomSheet(content: content, animated: animated, canDragDismiss: canDragDismiss, style: style, transition: transition, attemptDismiss: attemptDismiss, presentComplete: presentComplete, dismissComplete: dismissComplete, isPresented: isPresented)
             )
     }
 }
@@ -21,7 +21,7 @@ struct CustomSheet<Content: View>: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator {
         return Coordinator(parent: self)
     }
-    let content: Content
+    let content: () -> Content
     let controller = UIViewController()
     var animated: Bool
     var canDragDismiss: Bool
@@ -30,10 +30,9 @@ struct CustomSheet<Content: View>: UIViewControllerRepresentable {
     var attemptDismiss: (() -> Void)?
     var presentComplete: (() -> Void)?
     var dismissComplete: (() -> Void)?
-    var sheet: UIViewController
     @Binding var isPresented: Bool
     
-    init(content: Content, animated: Bool, canDragDismiss: Bool, style: UIModalPresentationStyle, transition: UIModalTransitionStyle, attemptDismiss: (() -> Void)?, presentComplete: (() -> Void)?, dismissComplete: (() -> Void)?, isPresented: Binding<Bool>) {
+    init(content: @escaping () -> Content, animated: Bool, canDragDismiss: Bool, style: UIModalPresentationStyle, transition: UIModalTransitionStyle, attemptDismiss: (() -> Void)?, presentComplete: (() -> Void)?, dismissComplete: (() -> Void)?, isPresented: Binding<Bool>) {
         self.content = content
         self.animated = animated
         self.style = style
@@ -43,10 +42,7 @@ struct CustomSheet<Content: View>: UIViewControllerRepresentable {
         self.dismissComplete = dismissComplete
         self.attemptDismiss = attemptDismiss
         self._isPresented = isPresented
-        self.sheet = UIHostingController(rootView: content)
-        self.sheet.modalPresentationStyle = self.style
-        self.sheet.modalTransitionStyle = self.transition
-        self.sheet.view.backgroundColor = .clear
+        
     }
     
     func makeUIViewController(context: Context) -> UIViewController {
@@ -56,9 +52,13 @@ struct CustomSheet<Content: View>: UIViewControllerRepresentable {
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         if self.isPresented {
+            let sheet = UIHostingController(rootView: self.content())
+            sheet.modalPresentationStyle = self.style
+            sheet.modalTransitionStyle = self.transition
+            sheet.view.backgroundColor = .clear
             if uiViewController.presentedViewController == nil {
-                uiViewController.present(self.sheet, animated: self.animated, completion: self.presentComplete)
-                self.sheet.presentationController?.delegate = context.coordinator
+                uiViewController.present(sheet, animated: self.animated, completion: self.presentComplete)
+                sheet.presentationController?.delegate = context.coordinator
             }
         } else if !self.isPresented {
             uiViewController.presentedViewController?.dismiss(animated: self.animated, completion: dismissComplete)
