@@ -70,7 +70,6 @@ public struct CustomAsyncImage: View {
                 placeholder
             }
         }
-        .scaledToFill()
         .onAppear {
             self.loader = self.loadImage()
                 .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
