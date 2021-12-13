@@ -41,7 +41,6 @@ public struct CustomAsyncImage: View {
         case .cached:
             request.cachePolicy = .returnCacheDataElseLoad
         }
-        request.cachePolicy = .reloadIgnoringLocalCacheData
         return URLSession(configuration: .default).dataTaskPublisher(for: request)
             .tryMap { (data, response) in
                 guard let image = UIImage(data: data) else {
