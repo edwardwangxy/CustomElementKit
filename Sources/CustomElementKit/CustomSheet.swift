@@ -52,7 +52,7 @@ struct CustomSheet<Content: View>: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        if self.isPresented && !self.presented {
+        if self.isPresented {
             let sheet = UIHostingController(rootView: self.content())
             sheet.modalPresentationStyle = self.style
             sheet.modalTransitionStyle = self.transition
