@@ -79,11 +79,9 @@ public struct CustomAsyncImage: View {
                             if let getErr = error {
                                 promise(.failure(getErr))
                             } else if let getURL = localURL {
-                                DispatchQueue.global(qos: .background).async {
-                                    if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
-                                        try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
-                                        try? self.fm.copyItem(at: getURL, to: cachedURL.appendingPathComponent(lastPath))
-                                    }
+                                if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
+                                    try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
+                                    try? self.fm.copyItem(at: getURL, to: cachedURL.appendingPathComponent(lastPath))
                                 }
                                 do {
                                     let data = try Data(contentsOf: getURL)
