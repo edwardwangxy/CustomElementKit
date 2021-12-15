@@ -131,5 +131,22 @@ public extension Sequence {
             return out.sorted(by: { $0.0 <= $1.0 }).map({ $0.1 })
         })
     }
+    
+    func concurrentMap<T>(_ transform: @escaping (Element) async -> T) async -> [T] {
+        await withTaskGroup(of: (Int, T).self, body: { group in
+            for (idx, each) in self.enumerated() {
+                group.addTask {
+                    return (idx, await transform(each))
+                }
+            }
+            var out = [(Int, T)]()
+            
+            for await (idx, item) in group {
+                out.append((idx, item))
+            }
+            
+            return out.sorted(by: { $0.0 <= $1.0 }).map({ $0.1 })
+        })
+    }
 }
 
