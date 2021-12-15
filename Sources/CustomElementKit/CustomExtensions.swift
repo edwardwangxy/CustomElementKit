@@ -114,3 +114,22 @@ public extension UIView {
     }
 }
 
+public extension Sequence {
+    func concurrentMap<T>(_ transform: @escaping (Element) async throws -> T) async throws -> [T] {
+        try await withThrowingTaskGroup(of: (Int, T).self, body: { group in
+            for (idx, each) in self.enumerated() {
+                group.addTask {
+                    return (idx, try await transform(each))
+                }
+            }
+            var out = [(Int, T)]()
+            
+            for try await (idx, item) in group {
+                out.append((idx, item))
+            }
+            
+            return out.sorted(by: { $0.0 <= $1.0 }).map({ $0.1 })
+        })
+    }
+}
+
