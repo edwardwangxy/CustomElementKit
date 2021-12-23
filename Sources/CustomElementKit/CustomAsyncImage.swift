@@ -25,10 +25,12 @@ public struct CustomAsyncImage: View {
     private var id: String?
     private var fm = FileManager.default
     private let loadDelay: Double
+    private let shouldReload: Bool
     @State private var timer: Timer?
-    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, loadDelay: Double = 0.05, resizable: Bool = true) {
+    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, loadDelay: Double = 0.05, shouldReload: Bool = true, resizable: Bool = true) {
         self.url = url
         self.loadDelay = loadDelay
+        self.shouldReload = shouldReload
         self.id = customCacheID
         if self.url.isFileURL {
             self.cachePolicy = .reload
@@ -127,22 +129,25 @@ public struct CustomAsyncImage: View {
             }
         }
         .onAppear {
-            self.timer = Timer.scheduledTimer(withTimeInterval: self.loadDelay, repeats: false, block: { _ in
-                self.loader = self.loadImage()
-                    .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
-                    .receive(on: DispatchQueue.main, options: nil)
-                    .sink(receiveCompletion: { _ in
-                        
-                    }, receiveValue: { image in
-                        self.image = image
-                    })
-            })
-            
+            if self.image == nil {
+                self.timer = Timer.scheduledTimer(withTimeInterval: self.loadDelay, repeats: false, block: { _ in
+                    self.loader = self.loadImage()
+                        .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
+                        .receive(on: DispatchQueue.main, options: nil)
+                        .sink(receiveCompletion: { _ in
+                            
+                        }, receiveValue: { image in
+                            self.image = image
+                        })
+                })
+            }
         }
         .onDisappear {
             self.timer?.invalidate()
             self.loader?.cancel()
-            self.image = nil
+            if self.shouldReload {
+                self.image = nil
+            }
         }
     }
 }
