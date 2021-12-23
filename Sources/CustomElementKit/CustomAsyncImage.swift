@@ -24,17 +24,11 @@ public struct CustomAsyncImage: View {
     private var placeholder: AnyView?
     private var id: String?
     private var fm = FileManager.default
-    private let loadDelay: Double
-    private let clearDelay: Double
-    private let shouldReload: Bool
     @State private var timer: Timer?
     @State private var clearTimer: Timer?
     
-    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, loadDelay: Double = 0.05, clearDelay: Double = 0.1, shouldReload: Bool = true, resizable: Bool = true) {
+    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true) {
         self.url = url
-        self.loadDelay = loadDelay
-        self.clearDelay = clearDelay
-        self.shouldReload = shouldReload
         self.id = customCacheID
         if self.url.isFileURL {
             self.cachePolicy = .reload
@@ -135,26 +129,19 @@ public struct CustomAsyncImage: View {
         .onAppear {
             self.clearTimer?.invalidate()
             if self.image == nil {
-                self.timer = Timer.scheduledTimer(withTimeInterval: self.loadDelay, repeats: false, block: { _ in
-                    self.loader = self.loadImage()
-                        .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
-                        .receive(on: DispatchQueue.main, options: nil)
-                        .sink(receiveCompletion: { _ in
-                            
-                        }, receiveValue: { image in
-                            self.image = image
-                        })
-                })
+                self.loader = self.loadImage()
+                    .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
+                    .receive(on: DispatchQueue.main, options: nil)
+                    .sink(receiveCompletion: { _ in
+                        
+                    }, receiveValue: { image in
+                        self.image = image
+                    })
             }
         }
         .onDisappear {
             self.timer?.invalidate()
             self.loader?.cancel()
-            if self.shouldReload {
-                self.clearTimer = Timer.scheduledTimer(withTimeInterval: self.clearDelay, repeats: false, block: { _ in
-                    self.image = nil
-                })
-            }
         }
     }
 }
