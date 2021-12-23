@@ -25,11 +25,15 @@ public struct CustomAsyncImage: View {
     private var id: String?
     private var fm = FileManager.default
     private let loadDelay: Double
+    private let clearDelay: Double
     private let shouldReload: Bool
     @State private var timer: Timer?
-    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, loadDelay: Double = 0.05, shouldReload: Bool = true, resizable: Bool = true) {
+    @State private var clearTimer: Timer?
+    
+    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, loadDelay: Double = 0.05, clearDelay: Double = 0.1, shouldReload: Bool = true, resizable: Bool = true) {
         self.url = url
         self.loadDelay = loadDelay
+        self.clearDelay = clearDelay
         self.shouldReload = shouldReload
         self.id = customCacheID
         if self.url.isFileURL {
@@ -129,6 +133,7 @@ public struct CustomAsyncImage: View {
             }
         }
         .onAppear {
+            self.clearTimer?.invalidate()
             if self.image == nil {
                 self.timer = Timer.scheduledTimer(withTimeInterval: self.loadDelay, repeats: false, block: { _ in
                     self.loader = self.loadImage()
@@ -146,7 +151,9 @@ public struct CustomAsyncImage: View {
             self.timer?.invalidate()
             self.loader?.cancel()
             if self.shouldReload {
-                self.image = nil
+                self.clearTimer = Timer.scheduledTimer(withTimeInterval: self.clearDelay, repeats: false, block: { _ in
+                    self.image = nil
+                })
             }
         }
     }
