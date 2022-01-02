@@ -67,15 +67,15 @@ public struct CustomActionSheet: UIViewControllerRepresentable {
             self.button = btn
         }
         
-        static func `default`(title: String, image: UIImage? = nil, handler: ((UIAlertAction) -> Void)? = nil) -> ActionButton {
+        public static func `default`(title: String, image: UIImage? = nil, handler: ((UIAlertAction) -> Void)? = nil) -> ActionButton {
             return ActionButton(title: title, image: image, style: .default, handler: handler)
         }
         
-        static func destructive(title: String, image: UIImage? = nil, handler: ((UIAlertAction) -> Void)? = nil) -> ActionButton {
+        public static func destructive(title: String, image: UIImage? = nil, handler: ((UIAlertAction) -> Void)? = nil) -> ActionButton {
             return ActionButton(title: title, image: image, style: .destructive, handler: handler)
         }
         
-        static func cancel(title: String, image: UIImage? = nil, handler: ((UIAlertAction) -> Void)? = nil) -> ActionButton {
+        public static func cancel(title: String, image: UIImage? = nil, handler: ((UIAlertAction) -> Void)? = nil) -> ActionButton {
             return ActionButton(title: title, image: image, style: .cancel, handler: handler)
         }
     }
