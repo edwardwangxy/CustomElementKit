@@ -11,10 +11,10 @@ import SwiftUI
 import Combine
 
 public extension View {
-    func customActionSheet<Content: View>(isPresented: Binding<Bool>, animated: Bool = true, canDragDismiss: Bool = true, style: UIModalPresentationStyle = .automatic, transition: UIModalTransitionStyle = .coverVertical, attemptDismiss: (() -> Void)? = nil, presentComplete: (() -> Void)? = nil, dismissComplete: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content) -> some View {
+    func customActionSheet<Content: View>(isPresented: Binding<Bool>, title: String? = nil, message: String? = nil, actionButtons: [CustomActionSheet<Content>.ActionButton], presentComplete: (() -> Void)? = nil, dismissComplete: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content) -> some View {
         return self
             .background(
-                CustomSheet(content: content, animated: animated, canDragDismiss: canDragDismiss, style: style, transition: transition, attemptDismiss: attemptDismiss, presentComplete: presentComplete, dismissComplete: dismissComplete, isPresented: isPresented)
+                CustomActionSheet(title: title, message: message, actionButtons: actionButtons, presentComplete: presentComplete, dismissComplete: dismissComplete, isPresented: isPresented)
             )
     }
 }
