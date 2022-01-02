@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 public extension View {
-    func customSheet<Content: View>(isPresented: Binding<Bool>, withBackground: Bool = true, animated: Bool = true, canDragDismiss: Bool = true, style: UIModalPresentationStyle = .automatic, transition: UIModalTransitionStyle = .coverVertical, attemptDismiss: (() -> Void)? = nil, presentComplete: (() -> Void)? = nil, dismissComplete: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content) -> some View {
+    func customSheet<Content: View>(isPresented: Binding<Bool>, withBackground: Bool = false, animated: Bool = true, canDragDismiss: Bool = true, style: UIModalPresentationStyle = .automatic, transition: UIModalTransitionStyle = .coverVertical, attemptDismiss: (() -> Void)? = nil, presentComplete: (() -> Void)? = nil, dismissComplete: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content) -> some View {
         return self
             .background(
                 CustomSheet(content: content, withBackgroundCover: withBackground, animated: animated, canDragDismiss: canDragDismiss, style: style, transition: transition, attemptDismiss: attemptDismiss, presentComplete: presentComplete, dismissComplete: dismissComplete, isPresented: isPresented)
