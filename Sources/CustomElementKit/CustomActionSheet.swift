@@ -11,7 +11,7 @@ import SwiftUI
 import Combine
 
 public extension View {
-    func customActionSheet<Content: View>(isPresented: Binding<Bool>, title: String? = nil, message: String? = nil, actionButtons: [CustomActionSheet<Content>.ActionButton], presentComplete: (() -> Void)? = nil, dismissComplete: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content) -> some View {
+    func customActionSheet(isPresented: Binding<Bool>, title: String? = nil, message: String? = nil, actionButtons: [CustomActionSheet.ActionButton], presentComplete: (() -> Void)? = nil, dismissComplete: (() -> Void)? = nil) -> some View {
         return self
             .background(
                 CustomActionSheet(title: title, message: message, actionButtons: actionButtons, presentComplete: presentComplete, dismissComplete: dismissComplete, isPresented: isPresented)
@@ -19,7 +19,7 @@ public extension View {
     }
 }
 
-public struct CustomActionSheet<Content: View>: UIViewControllerRepresentable {
+public struct CustomActionSheet: UIViewControllerRepresentable {
     let alertController: UIAlertController
     var presentComplete: (() -> Void)?
     var dismissComplete: (() -> Void)?
