@@ -51,10 +51,13 @@ struct CustomSheet<Content: View>: UIViewControllerRepresentable {
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         if self.isPresented {
-            self.sheet.presentationController?.delegate = context.coordinator
             uiViewController.present(self.sheet, animated: self.animated, completion: self.presentComplete)
+            self.sheet.presentationController?.delegate = context.coordinator
         } else {
-            uiViewController.presentedViewController?.dismiss(animated: self.animated, completion: dismissComplete)
+            uiViewController.presentedViewController?.dismiss(animated: self.animated, completion: {
+                self.isPresented = false
+                self.dismissComplete?()
+            })
         }
     }
     
