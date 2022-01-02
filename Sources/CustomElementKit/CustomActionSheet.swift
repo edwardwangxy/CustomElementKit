@@ -1,6 +1,6 @@
 //
 //  CustomActionSheet.swift
-//  
+//
 //
 //  Created by Xiangyu Wang on 1/2/22.
 //
@@ -47,13 +47,15 @@ public struct CustomActionSheet: UIViewControllerRepresentable {
     }
     
     public func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        if self.isPresented {
+        if self.isPresented && !context.coordinator.presented {
+            context.coordinator.presented = true
             uiViewController.present(self.alertController, animated: true, completion: {
                 let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(context.coordinator.dismissAlertController))
                 self.alertController.view.superview?.subviews[0].addGestureRecognizer(tapGesture)
                 self.presentComplete?()
             })
-        } else {
+        } else if !self.isPresented {
+            context.coordinator.presented = false
             uiViewController.presentedViewController?.dismiss(animated: true, completion: {
                 self.isPresented = false
                 self.dismissComplete?()
@@ -98,6 +100,7 @@ public struct CustomActionSheet: UIViewControllerRepresentable {
     
     public class Coordinator: NSObject, UIAdaptivePresentationControllerDelegate {
         let parent: CustomActionSheet
+        var presented: Bool = false
         init(parent: CustomActionSheet) {
             self.parent = parent
         }
