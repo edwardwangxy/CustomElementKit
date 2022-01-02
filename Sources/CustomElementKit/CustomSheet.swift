@@ -21,50 +21,39 @@ struct CustomSheet<Content: View>: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator {
         return Coordinator(parent: self)
     }
-    let content: () -> Content
-    let controller = UIViewController()
+    let sheet: UINavigationController
     var animated: Bool
     var canDragDismiss: Bool
-    var style: UIModalPresentationStyle
-    var transition: UIModalTransitionStyle
     var attemptDismiss: (() -> Void)?
     var presentComplete: (() -> Void)?
     var dismissComplete: (() -> Void)?
     @Binding var isPresented: Bool
-    @State var presented: Bool = false
     
     init(content: @escaping () -> Content, animated: Bool, canDragDismiss: Bool, style: UIModalPresentationStyle, transition: UIModalTransitionStyle, attemptDismiss: (() -> Void)?, presentComplete: (() -> Void)?, dismissComplete: (() -> Void)?, isPresented: Binding<Bool>) {
-        self.content = content
+        let hc = UIHostingController(rootView: content())
+        hc.view.backgroundColor = .clear
+        self.sheet = UINavigationController(rootViewController: hc)
+        self.sheet.modalPresentationStyle = style
+        self.sheet.modalTransitionStyle = transition
+        self.sheet.view.backgroundColor = .clear
         self.animated = animated
-        self.style = style
-        self.transition = transition
         self.canDragDismiss = canDragDismiss
         self.presentComplete = presentComplete
         self.dismissComplete = dismissComplete
         self.attemptDismiss = attemptDismiss
         self._isPresented = isPresented
-        
     }
     
     func makeUIViewController(context: Context) -> UIViewController {
-        self.controller.view.backgroundColor = .clear
-        return self.controller
+        
+        return UIViewController()
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         if self.isPresented {
-            let sheet = UIHostingController(rootView: self.content())
-            sheet.modalPresentationStyle = self.style
-            sheet.modalTransitionStyle = self.transition
-            sheet.view.backgroundColor = .clear
-            DispatchQueue.main.async {
-                self.presented = true
-            }
-            if uiViewController.presentedViewController == nil {
-                uiViewController.present(sheet, animated: self.animated, completion: self.presentComplete)
-                sheet.presentationController?.delegate = context.coordinator
-            }
-        } else if !self.isPresented && self.presented {
+            self.sheet.presentationController?.delegate = context.coordinator
+            uiViewController.present(self.sheet, animated: self.animated, completion: self.presentComplete)
+        } else {
             uiViewController.presentedViewController?.dismiss(animated: self.animated, completion: dismissComplete)
         }
     }
@@ -76,7 +65,6 @@ struct CustomSheet<Content: View>: UIViewControllerRepresentable {
         }
         
         func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-            self.parent.presented = false
             self.parent.isPresented = false
         }
         
