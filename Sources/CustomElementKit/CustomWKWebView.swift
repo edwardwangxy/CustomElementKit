@@ -33,7 +33,7 @@ public class CustomWKWebViewController: NSObject, WKUIDelegate, ObservableObject
     @Published var canGoBack: Bool = false
     @Published var canGoForward: Bool = false
     
-    override init() {
+    public override init() {
         self.webView = WKWebView(frame: .zero, configuration: self.config)
         super.init()
         self.webView.uiDelegate = self
