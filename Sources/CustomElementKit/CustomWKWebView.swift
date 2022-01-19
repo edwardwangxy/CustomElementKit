@@ -26,7 +26,7 @@ public struct CustomWKWebView: UIViewRepresentable {
 }
 
 
-public class CustomWKWebViewController: NSObject, WKUIDelegate, ObservableObject {
+open class CustomWKWebViewController: NSObject, WKUIDelegate, ObservableObject {
     public let config = WKWebViewConfiguration()
     public let webView: WKWebView
     
