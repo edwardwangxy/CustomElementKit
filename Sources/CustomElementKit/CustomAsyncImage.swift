@@ -16,7 +16,7 @@ public struct CustomAsyncImage: View {
     }
     
     let url: URL
-    @State var image: UIImage? = nil
+    @ObservedObject var imageHolder: CustomAsyncImageHolder = CustomAsyncImageHolder()
     @State private var loader: AnyCancellable? = nil
     private let activeResizable: Bool
     private let cachePolicy: CachePolicy
@@ -108,12 +108,12 @@ public struct CustomAsyncImage: View {
     
     public func placeholder<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         self
-            .modifier(CustomAsyncImagePlaceholderModifier(image: self.$image, content))
+            .modifier(CustomAsyncImagePlaceholderModifier(imageHolder: self.imageHolder, content))
     }
 
     public var body: some View {
         ZStack {
-            if let getImage = self.image {
+            if let getImage = self.imageHolder.image {
                 if self.activeResizable {
                     Image(uiImage: getImage)
                         .resizable()
@@ -124,14 +124,14 @@ public struct CustomAsyncImage: View {
         }
         .onAppear {
             self.clearTimer?.invalidate()
-            if self.image == nil {
+            if self.imageHolder.image == nil {
                 self.loader = self.loadImage()
                     .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
                     .receive(on: DispatchQueue.main, options: nil)
                     .sink(receiveCompletion: { _ in
                         
                     }, receiveValue: { image in
-                        self.image = image
+                        self.imageHolder.image = image
                     })
             }
         }
@@ -145,19 +145,23 @@ public struct CustomAsyncImage: View {
 struct CustomAsyncImagePlaceholderModifier<PH: View>: ViewModifier {
     
     let content: PH
-    @Binding var image: UIImage?
+    @ObservedObject var imageHolder: CustomAsyncImageHolder
     
-    init(image: Binding<UIImage?>, @ViewBuilder _ content: () -> PH) {
+    init(imageHolder: CustomAsyncImageHolder, @ViewBuilder _ content: () -> PH) {
         self.content = content()
-        self._image = image
+        self.imageHolder = imageHolder
     }
     
     func body(content: Content) -> some View {
         ZStack {
-            if self.image == nil {
+            if self.imageHolder.image == nil {
                 self.content
             }
             content
         }
     }
+}
+
+class CustomAsyncImageHolder: ObservableObject {
+    @Published var image: UIImage?
 }
