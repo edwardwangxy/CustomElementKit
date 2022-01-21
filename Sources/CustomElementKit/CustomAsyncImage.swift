@@ -108,7 +108,7 @@ public struct CustomAsyncImage: View {
     
     public func placeholder<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         self
-            .modifier(CustomAsyncImagePlaceholderModifier(content))
+            .modifier(CustomAsyncImagePlaceholderModifier(image: self.$image, content))
     }
 
     public var body: some View {
@@ -145,14 +145,18 @@ public struct CustomAsyncImage: View {
 struct CustomAsyncImagePlaceholderModifier<PH: View>: ViewModifier {
     
     let content: PH
+    @Binding var image: UIImage?
     
-    init(@ViewBuilder _ content: () -> PH) {
+    init(image: Binding<UIImage?>, @ViewBuilder _ content: () -> PH) {
         self.content = content()
+        self._image = image
     }
     
     func body(content: Content) -> some View {
         ZStack {
-            self.content
+            if self.image == nil {
+                self.content
+            }
             content
         }
     }
