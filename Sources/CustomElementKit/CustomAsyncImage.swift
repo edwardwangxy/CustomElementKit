@@ -20,8 +20,6 @@ public struct CustomAsyncImage: View {
     @State private var loader: AnyCancellable? = nil
     private let activeResizable: Bool
     private let cachePolicy: CachePolicy
-    @State
-    private var placeholder: AnyView?
     private var id: String?
     private var fm = FileManager.default
     @State private var timer: Timer?
@@ -108,9 +106,9 @@ public struct CustomAsyncImage: View {
         
     }
     
-    public func placeholder<Content: View>(@ViewBuilder _ content: () -> Content) -> Self {
-        self.placeholder = AnyView(content())
-        return self
+    public func placeholder<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        self
+            .modifier(CustomAsyncImagePlaceholderModifier(content))
     }
 
     public var body: some View {
@@ -122,8 +120,6 @@ public struct CustomAsyncImage: View {
                 } else {
                     Image(uiImage: getImage)
                 }
-            } else if let placeholder = placeholder {
-                placeholder
             }
         }
         .onAppear {
@@ -146,3 +142,18 @@ public struct CustomAsyncImage: View {
     }
 }
 
+struct CustomAsyncImagePlaceholderModifier<PH: View>: ViewModifier {
+    
+    let content: PH
+    
+    init(@ViewBuilder _ content: () -> PH) {
+        self.content = content()
+    }
+    
+    func body(content: Content) -> some View {
+        ZStack {
+            self.content
+            content
+        }
+    }
+}
