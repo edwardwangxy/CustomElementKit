@@ -46,7 +46,7 @@ public struct CustomAsyncImage: View {
             self.cachePolicy = cachePolicy
         }
         self.activeResizable = resizable
-        self.placeholder = AnyView(placeholder())
+        self._placeholder = State(initialValue: AnyView(placeholder()))
     }
     
     enum ImageLoadError: Error {
