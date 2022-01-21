@@ -16,10 +16,11 @@ public struct CustomAsyncImage: View {
     }
     
     let url: URL
-    @ObservedObject var imageHolder: CustomAsyncImageHolder = CustomAsyncImageHolder()
+    @State var image: UIImage? = nil
     @State private var loader: AnyCancellable? = nil
     private let activeResizable: Bool
     private let cachePolicy: CachePolicy
+    @State var placeholder: AnyView?
     private var id: String?
     private var fm = FileManager.default
     @State private var timer: Timer?
@@ -34,6 +35,18 @@ public struct CustomAsyncImage: View {
             self.cachePolicy = cachePolicy
         }
         self.activeResizable = resizable
+    }
+    
+    public init<PH: View>(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, @ViewBuilder placeholder: () -> PH) {
+        self.url = url
+        self.id = customCacheID
+        if self.url.isFileURL {
+            self.cachePolicy = .reload
+        } else {
+            self.cachePolicy = cachePolicy
+        }
+        self.activeResizable = resizable
+        self.placeholder = AnyView(placeholder())
     }
     
     enum ImageLoadError: Error {
@@ -106,32 +119,34 @@ public struct CustomAsyncImage: View {
         
     }
     
-    public func placeholder<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        self
-            .modifier(CustomAsyncImagePlaceholderModifier(imageHolder: self.imageHolder, content))
+    public func placeholder<Content: View>(@ViewBuilder _ content: () -> Content) -> Self {
+        self.placeholder = AnyView(content())
+        return self
     }
 
     public var body: some View {
         ZStack {
-            if let getImage = self.imageHolder.image {
+            if let getImage = self.image {
                 if self.activeResizable {
                     Image(uiImage: getImage)
                         .resizable()
                 } else {
                     Image(uiImage: getImage)
                 }
+            } else if let placeholder = placeholder {
+                placeholder
             }
         }
         .onAppear {
             self.clearTimer?.invalidate()
-            if self.imageHolder.image == nil {
+            if self.image == nil {
                 self.loader = self.loadImage()
                     .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
                     .receive(on: DispatchQueue.main, options: nil)
                     .sink(receiveCompletion: { _ in
                         
                     }, receiveValue: { image in
-                        self.imageHolder.image = image
+                        self.image = image
                     })
             }
         }
@@ -142,26 +157,3 @@ public struct CustomAsyncImage: View {
     }
 }
 
-struct CustomAsyncImagePlaceholderModifier<PH: View>: ViewModifier {
-    
-    let content: PH
-    @ObservedObject var imageHolder: CustomAsyncImageHolder
-    
-    init(imageHolder: CustomAsyncImageHolder, @ViewBuilder _ content: () -> PH) {
-        self.content = content()
-        self.imageHolder = imageHolder
-    }
-    
-    func body(content: Content) -> some View {
-        ZStack {
-            if self.imageHolder.image == nil {
-                self.content
-            }
-            content
-        }
-    }
-}
-
-class CustomAsyncImageHolder: ObservableObject {
-    @Published var image: UIImage?
-}
