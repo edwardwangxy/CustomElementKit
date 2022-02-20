@@ -33,9 +33,12 @@ open class CustomWKWebViewController: NSObject, WKUIDelegate, ObservableObject {
     @Published var canGoBack: Bool = false
     @Published var canGoForward: Bool = false
     
-    public override init() {
+    public init(clearCache: Bool = true) {
         self.webView = WKWebView(frame: .zero, configuration: self.config)
         super.init()
+        if clearCache {
+            WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: Date(timeIntervalSince1970: 0), completionHandler:{ })
+        }
         self.webView.uiDelegate = self
     }
     
