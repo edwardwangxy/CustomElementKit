@@ -50,6 +50,14 @@ open class CustomWKWebViewController: NSObject, ObservableObject {
         WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: complete)
     }
     
+    public func clearCache() async {
+        _ = await withCheckedContinuation({ continuation in
+            WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: {
+                continuation.resume(returning: true)
+            })
+        })
+    }
+    
     public func clearCookie() {
         let storage = HTTPCookieStorage.shared
         if let cookies = storage.cookies {
