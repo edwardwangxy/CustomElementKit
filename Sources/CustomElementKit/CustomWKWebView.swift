@@ -26,20 +26,37 @@ public struct CustomWKWebView: UIViewRepresentable {
 }
 
 
-open class CustomWKWebViewController: NSObject, WKUIDelegate, ObservableObject {
+open class CustomWKWebViewController: NSObject, ObservableObject {
     public let config = WKWebViewConfiguration()
     public let webView: WKWebView
     
     @Published var canGoBack: Bool = false
     @Published var canGoForward: Bool = false
     
-    public init(clearCache: Bool = true) {
+    var urlUpdate: (URL) -> Void = {_ in}
+    var navigationResponse: (WKNavigationResponse) -> Void = {_ in}
+    var offsetUpdate: (CGPoint) -> Void = {_ in}
+    
+    public override init() {
         self.webView = WKWebView(frame: .zero, configuration: self.config)
         super.init()
-        if clearCache {
-            WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: Date(timeIntervalSince1970: 0), completionHandler:{ })
-        }
+        self.webView.navigationDelegate = self
+        self.webView.scrollView.delegate = self
+        
         self.webView.uiDelegate = self
+    }
+    
+    public func clearCache(complete: @escaping () -> Void = {}) {
+        WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: complete)
+    }
+    
+    public func clearCookie() {
+        let storage = HTTPCookieStorage.shared
+        if let cookies = storage.cookies {
+            for cookies in cookies {
+                storage.deleteCookie(cookies)
+            }
+        }
     }
     
     public func updateURL(url: URL) {
@@ -55,4 +72,42 @@ open class CustomWKWebViewController: NSObject, WKUIDelegate, ObservableObject {
         self.webView.goForward()
     }
     
+    public func setURLUpdate(action: @escaping (URL) -> Void) {
+        self.urlUpdate = action
+    }
+    
+    public func setResponse(action: @escaping (WKNavigationResponse) -> Void) {
+        self.navigationResponse = action
+    }
+    
+    public func setOffsetUpdate(action: @escaping (CGPoint) -> Void) {
+        self.offsetUpdate = action
+    }
+    
+    
+    
 }
+
+
+extension CustomWKWebViewController: WKUIDelegate, WKNavigationDelegate, UIScrollViewDelegate {
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        self.offsetUpdate(scrollView.contentOffset)
+    }
+    
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if let getURL = navigationAction.request.url {
+            self.urlUpdate(getURL)
+        }
+        decisionHandler(.allow)
+    }
+    
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        self.navigationResponse(navigationResponse)
+        decisionHandler(.allow)
+    }
+}
+
+
+
+
+
