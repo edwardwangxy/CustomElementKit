@@ -23,10 +23,11 @@ public struct CustomAsyncImage: View {
     @State var placeholder: AnyView?
     private var id: String?
     private var fm = FileManager.default
-    @State private var timer: Timer?
+    private var delay: Double
+    @State private var timer: DispatchSourceTimer?
     @State private var clearTimer: Timer?
     
-    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true) {
+    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, delay: Double = 0.5) {
         self.url = url
         self.id = customCacheID
         if self.url.isFileURL {
@@ -35,9 +36,10 @@ public struct CustomAsyncImage: View {
             self.cachePolicy = cachePolicy
         }
         self.activeResizable = resizable
+        self.delay = delay
     }
     
-    public init<PH: View>(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, @ViewBuilder placeholder: () -> PH) {
+    public init<PH: View>(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, @ViewBuilder placeholder: () -> PH, delay: Double = 0.5) {
         self.url = url
         self.id = customCacheID
         if self.url.isFileURL {
@@ -47,6 +49,7 @@ public struct CustomAsyncImage: View {
         }
         self.activeResizable = resizable
         self._placeholder = State(initialValue: AnyView(placeholder()))
+        self.delay = delay
     }
     
     enum ImageLoadError: Error {
@@ -138,20 +141,33 @@ public struct CustomAsyncImage: View {
             }
         }
         .onAppear {
+            if self.url.path.contains("F13D476A-6B0E-4EE4-8631-52E4060B5BE0") {
+                print(self.url)
+            }
             self.clearTimer?.invalidate()
             if self.image == nil {
-                self.loader = self.loadImage()
-                    .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
-                    .receive(on: DispatchQueue.main, options: nil)
-                    .sink(receiveCompletion: { _ in
-                        
-                    }, receiveValue: { image in
-                        self.image = image
-                    })
+                self.timer = DispatchSource.makeTimerSource()
+                self.timer?.schedule(deadline: .now() + self.delay)
+                self.timer?.setEventHandler(handler: {
+                    self.loader = self.loadImage()
+                        .subscribe(on: DispatchQueue.global(qos: .utility), options: nil)
+                        .receive(on: DispatchQueue.main, options: nil)
+                        .sink(receiveCompletion: { _ in
+                            
+                        }, receiveValue: { image in
+                            DispatchQueue.main.async {
+                                withAnimation {
+                                    self.image = image
+                                }
+                                
+                            }
+                        })
+                })
+                self.timer?.resume()
             }
         }
         .onDisappear {
-            self.timer?.invalidate()
+            self.timer?.cancel()
             self.loader?.cancel()
         }
     }
