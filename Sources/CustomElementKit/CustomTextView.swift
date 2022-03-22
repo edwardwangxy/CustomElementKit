@@ -34,6 +34,10 @@ public struct CustomTextView: UIViewRepresentable {
             self.parent.textEditing?(textView)
         }
         
+        public func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+            return self.parent.onClickUrl(URL)
+        }
+        
         public func textViewDidBeginEditing(_ textView: UITextView) {
             self.didBecomeFirstResponder = true
         }
@@ -52,8 +56,9 @@ public struct CustomTextView: UIViewRepresentable {
     public var setTextViewShouldChangeChar: (UITextView, NSRange, String) -> Bool
     public var lineSpacing: CGFloat
     private var textEditing: ((UITextView) -> Void)?
+    private var onClickUrl: (URL) -> Bool
     
-    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, lineSpacing: CGFloat = 2, textView: CustomUITextView = CustomUITextView(frame: .zero), setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}, textEditing: ((UITextView) -> Void)? = nil) {
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, lineSpacing: CGFloat = 2, textView: CustomUITextView = CustomUITextView(frame: .zero), urlClicked: @escaping (URL) -> Bool = {_ in return true}, setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}, textEditing: ((UITextView) -> Void)? = nil) {
         self._text = text
         self._acceptOnlyInteger = acceptOnlyInteger
         self._isFirstResponder = isFirstResponder
@@ -62,6 +67,7 @@ public struct CustomTextView: UIViewRepresentable {
         self.setTextViewShouldChangeChar = setShouldChangeChar
         self.lineSpacing = lineSpacing
         self.textEditing = textEditing
+        self.onClickUrl = urlClicked
     }
     
     public func makeUIView(context: UIViewRepresentableContext<CustomTextView>) -> CustomUITextView {
