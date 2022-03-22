@@ -70,6 +70,18 @@ public struct CustomTextView: UIViewRepresentable {
         self.onClickUrl = urlClicked
     }
     
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, lineSpacing: CGFloat = 2, textView: CustomUITextView = CustomUITextView(frame: .zero), urlClicked: @escaping (URL) -> Bool = {_ in return true}, setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}) {
+        self._text = text
+        self._acceptOnlyInteger = acceptOnlyInteger
+        self._isFirstResponder = isFirstResponder
+        self.dynamicResponder = dynamicResponder
+        self.textField = textView
+        self.setTextViewShouldChangeChar = setShouldChangeChar
+        self.lineSpacing = lineSpacing
+        self.textEditing = nil
+        self.onClickUrl = urlClicked
+    }
+    
     public func makeUIView(context: UIViewRepresentableContext<CustomTextView>) -> CustomUITextView {
         self.textField.delegate = context.coordinator
         self.textField.layoutManager.delegate = context.coordinator
