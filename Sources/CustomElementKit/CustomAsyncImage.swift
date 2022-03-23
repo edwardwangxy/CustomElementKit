@@ -16,6 +16,7 @@ public struct CustomAsyncImage: View {
     }
     
     let url: URL
+    let hasURL: Bool
     @State var image: UIImage? = nil
     @State private var loader: AnyCancellable? = nil
     private let activeResizable: Bool
@@ -27,8 +28,14 @@ public struct CustomAsyncImage: View {
     @State private var timer: DispatchSourceTimer?
     @State private var clearTimer: Timer?
     
-    public init(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, delay: Double = 0.5) {
-        self.url = url
+    public init(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, delay: Double = 0.5) {
+        if let getURL = url {
+            self.url = getURL
+            self.hasURL = true
+        } else {
+            self.url = URL(string: "https://parseapi.handyapp.io/parse/files/handy_app/771d070dd3650f52ed429f25fd260b21_ef51303fda014c28c0d707c02f94e58c_3BFA08DD-786D-4787-B252-79650196F69B.png")!
+            self.hasURL = false
+        }
         self.id = customCacheID
         if self.url.isFileURL {
             self.cachePolicy = .reload
@@ -37,10 +44,18 @@ public struct CustomAsyncImage: View {
         }
         self.activeResizable = resizable
         self.delay = delay
+
     }
     
-    public init<PH: View>(url: URL, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, @ViewBuilder placeholder: () -> PH, delay: Double = 0.5) {
-        self.url = url
+    public init<PH: View>(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, @ViewBuilder placeholder: () -> PH, delay: Double = 0.5) {
+        if let getURL = url {
+            self.url = getURL
+            self.hasURL = true
+        } else {
+            self.url = URL(string: "https://parseapi.handyapp.io/parse/files/handy_app/771d070dd3650f52ed429f25fd260b21_ef51303fda014c28c0d707c02f94e58c_3BFA08DD-786D-4787-B252-79650196F69B.png")!
+            self.hasURL = false
+        }
+        
         self.id = customCacheID
         if self.url.isFileURL {
             self.cachePolicy = .reload
@@ -50,6 +65,7 @@ public struct CustomAsyncImage: View {
         self.activeResizable = resizable
         self._placeholder = State(initialValue: AnyView(placeholder()))
         self.delay = delay
+        
     }
     
     enum ImageLoadError: Error {
@@ -141,6 +157,9 @@ public struct CustomAsyncImage: View {
             }
         }
         .onAppear {
+            if !self.hasURL {
+                return
+            }
             if self.url.path.contains("F13D476A-6B0E-4EE4-8631-52E4060B5BE0") {
                 print(self.url)
             }
