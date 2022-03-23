@@ -27,8 +27,8 @@ public struct CustomAsyncImage: View {
     private var delay: Double
     @State private var timer: DispatchSourceTimer?
     @State private var clearTimer: Timer?
-    
-    public init(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, delay: Double = 0.5) {
+    let loadImageComplete: (UIImage) -> Void
+    public init(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, delay: Double = 0.5, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
         if let getURL = url {
             self.url = getURL
             self.hasURL = true
@@ -44,10 +44,10 @@ public struct CustomAsyncImage: View {
         }
         self.activeResizable = resizable
         self.delay = delay
-
+        self.loadImageComplete = loadImageComplete
     }
     
-    public init<PH: View>(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, @ViewBuilder placeholder: () -> PH, delay: Double = 0.5) {
+    public init<PH: View>(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, resizable: Bool = true, @ViewBuilder placeholder: () -> PH, delay: Double = 0.5, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
         if let getURL = url {
             self.url = getURL
             self.hasURL = true
@@ -65,7 +65,7 @@ public struct CustomAsyncImage: View {
         self.activeResizable = resizable
         self._placeholder = State(initialValue: AnyView(placeholder()))
         self.delay = delay
-        
+        self.loadImageComplete = loadImageComplete
     }
     
     enum ImageLoadError: Error {
@@ -174,6 +174,7 @@ public struct CustomAsyncImage: View {
                         .sink(receiveCompletion: { _ in
                             
                         }, receiveValue: { image in
+                            self.loadImageComplete(image)
                             DispatchQueue.main.async {
                                 withAnimation {
                                     self.image = image
