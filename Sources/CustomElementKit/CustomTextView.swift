@@ -58,7 +58,7 @@ public struct CustomTextView: UIViewRepresentable {
     private var textEditing: ((UITextView) -> Void)?
     private var onClickUrl: (URL) -> Bool
     
-    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, lineSpacing: CGFloat = 2, textView: CustomUITextView = CustomUITextView(frame: .zero), urlClicked: @escaping (URL) -> Bool = {_ in return true}, setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}, textEditing: ((UITextView) -> Void)? = nil) {
+    public init(text: Binding<String>, acceptOnlyInteger: Binding<Bool>, dynamicResponder: Bool = false, isFirstResponder: Binding<Bool>, lineSpacing: CGFloat = 2, textView: CustomUITextView = CustomUITextView(frame: .zero), urlClicked: @escaping (URL) -> Bool = {_ in return true}, setShouldChangeChar: @escaping (UITextView, NSRange, String) -> Bool = {_, _, _ in return true}, textEditing: ((UITextView) -> Void)?) {
         self._text = text
         self._acceptOnlyInteger = acceptOnlyInteger
         self._isFirstResponder = isFirstResponder
