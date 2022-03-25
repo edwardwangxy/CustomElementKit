@@ -31,7 +31,6 @@ class CustomAsyncImageCache {
         timer.setEventHandler {
             self.imageCache.removeObject(forKey: NSString(string: id))
             self.scheduleCacheRemove[id]?.cancel()
-            self.scheduleCacheRemove[id] = nil
         }
         timer.resume()
         self.scheduleCacheRemove[id] = timer
