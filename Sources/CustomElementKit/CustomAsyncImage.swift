@@ -191,7 +191,12 @@ public class CustomAsyncImageData: ObservableObject {
                                 complete(image)
                             }
                         } else {
-                            complete(UIImage(data: data))
+                            let image = UIImage(data: data)
+                            if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
+                                try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
+                                try? image?.pngData()?.write(to: cachedURL.appendingPathComponent(lastPath))
+                            }
+                            complete(image)
                         }
                     } else {
                         complete(nil)
