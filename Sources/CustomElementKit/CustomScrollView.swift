@@ -47,33 +47,31 @@ public struct CustomScrollView<Content: View>: View {
 
 public struct ScrollViewScrollTracking<Content: View>: View {
     let axes: Axis.Set
-    let showsIndicators: Bool
     let content: (AnyView) -> Content
     let offsetChange: (CGFloat) -> Void
     let spaceName: String = UUID().uuidString
     
-    public init(_ axes: Axis.Set = .vertical, showsIndicators: Bool = false, offsetChange: @escaping (CGFloat) -> Void = {_ in}, content: @escaping (AnyView) -> Content) {
+    public init(_ axes: Axis.Set = .vertical, offsetChange: @escaping (CGFloat) -> Void = {_ in}, content: @escaping (AnyView) -> Content) {
         self.axes = axes
-        self.showsIndicators = showsIndicators
         self.content = content
         self.offsetChange = offsetChange
     }
     
     public var body: some View {
-        self.content(
-            AnyView(
-                GeometryReader { proxy in
-                    Color.clear
-                        .preference(
-                            key: CustomOffsetPreferenceKey.self,
-                            value: self.axes == .vertical ? proxy.frame(in: .named(self.spaceName)).minY : proxy.frame(in: .named(self.spaceName)).minX
-                        )
-                }
-                .frame(height: 0)
+        GeometryReader { proxy in
+            self.content(
+                AnyView(
+                    Color.white
+                        .transformAnchorPreference(key: CustomOffsetPreferenceKey.self, value: .bounds, transform: { value, anchor in
+                            value = proxy[anchor].minY
+                        })
+                        .onPreferenceChange(CustomOffsetPreferenceKey.self, perform: { new in
+                            self.offsetChange(new)
+                        })
+                )
             )
-        )
-        .coordinateSpace(name: self.spaceName)
-        .onPreferenceChange(CustomOffsetPreferenceKey.self, perform: self.offsetChange)
+        }
     }
 }
+
 
