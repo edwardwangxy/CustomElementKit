@@ -12,7 +12,7 @@ import UIKit
 public struct ListHideSeperator: ViewModifier {
     let bgColor: Color
     
-    public init(bgColor: Color = Color(red: 0, green: 0, blue: 0)) {
+    public init(bgColor: Color = Color(red: 1, green: 1, blue: 1)) {
         self.bgColor = bgColor
     }
     
@@ -32,7 +32,7 @@ public struct ListHideSeperator: ViewModifier {
 }
 
 public extension View {
-    func listItemRemoveStyle(bgColor: Color = Color(red: 0, green: 0, blue: 0)) -> some View {
+    func listItemRemoveStyle(bgColor: Color = Color(red: 1, green: 1, blue: 1)) -> some View {
         return self.modifier(ListHideSeperator(bgColor: bgColor))
     }
 }
