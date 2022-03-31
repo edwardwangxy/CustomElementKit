@@ -74,14 +74,18 @@ public class CustomAsyncImageData: ObservableObject {
         self.cacheSize = cacheSize
         if let getImage = CustomAsyncImageCache.shared.loadImage(id: self.id ?? self.url.path) {
             DispatchQueue.main.async {
-                self.image = getImage
+                withAnimation {
+                    self.image = getImage
+                }
             }
         } else {
             self.loadImage { image in
                 if let getImage = image {
                     CustomAsyncImageCache.shared.cacheImage(id: self.id ?? self.url.path, image: getImage)
                     DispatchQueue.main.async {
-                        self.image = getImage
+                        withAnimation {
+                            self.image = getImage
+                        }
                     }
                 }
             }
