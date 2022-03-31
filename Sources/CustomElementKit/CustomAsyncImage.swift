@@ -24,6 +24,10 @@ class CustomAsyncImageCache {
         return self.imageCache.object(forKey: NSString(string: id))
     }
     
+    func cancelClear(id: String) {
+        self.scheduleCacheRemove[id]?.cancel()
+    }
+    
     func scheduleCacheClear(id: String) {
         self.scheduleCacheRemove[id]?.cancel()
         let timer = DispatchSource.makeTimerSource()
@@ -72,6 +76,18 @@ public class CustomAsyncImageData: ObservableObject {
         self.delay = delay
         self.loadImageComplete = loadImageComplete
         self.cacheSize = cacheSize
+        self.fetch()
+    }
+    
+    deinit {
+        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path)
+    }
+    
+    enum ImageLoadError: Error {
+        case loadFail
+    }
+    
+    func fetch() {
         if let getImage = CustomAsyncImageCache.shared.loadImage(id: self.id ?? self.url.path) {
             DispatchQueue.main.async {
                 withAnimation {
@@ -92,12 +108,12 @@ public class CustomAsyncImageData: ObservableObject {
         }
     }
     
-    deinit {
-        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path)
+    func cancelClear() {
+        CustomAsyncImageCache.shared.cancelClear(id: self.id ?? self.url.path)
     }
     
-    enum ImageLoadError: Error {
-        case loadFail
+    func clear() {
+        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path)
     }
     
     func generateThumb(image: Data, maxSize: CGFloat = 100, callback: @escaping (UIImage?) -> Void) {
@@ -252,6 +268,15 @@ public struct CustomAsyncImage: View {
             } else if let placeholder = placeholder {
                 placeholder
             }
+        }
+        .onAppear {
+            self.imageData.cancelClear()
+            if self.imageData.image == nil {
+                self.imageData.fetch()
+            }
+        }
+        .onDisappear {
+            self.imageData.clear()
         }
     }
 }
