@@ -28,10 +28,10 @@ class CustomAsyncImageCache {
         self.scheduleCacheRemove[id]?.cancel()
     }
     
-    func scheduleCacheClear(id: String) {
+    func scheduleCacheClear(id: String, time: Double = 30) {
         self.scheduleCacheRemove[id]?.cancel()
         let timer = DispatchSource.makeTimerSource()
-        timer.schedule(deadline: .now() + 60 * 5)
+        timer.schedule(deadline: .now() + 30)
         timer.setEventHandler {
             self.imageCache.removeObject(forKey: NSString(string: id))
             self.scheduleCacheRemove[id]?.cancel()
@@ -58,8 +58,9 @@ public class CustomAsyncImageData: ObservableObject {
     private var fm = FileManager.default
     let loadImageComplete: (UIImage) -> Void
     let delay: Double
+    let clearCacheTime: Double
     
-    public init(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, delay: Double = 0, cacheSize: CGFloat = 400, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
+    public init(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, delay: Double = 0, cacheSize: CGFloat = 400, clearCacheTime: Double = 30, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
         if let getURL = url {
             self.url = getURL
             self.hasURL = true
@@ -76,11 +77,12 @@ public class CustomAsyncImageData: ObservableObject {
         self.delay = delay
         self.loadImageComplete = loadImageComplete
         self.cacheSize = cacheSize
+        self.clearCacheTime = clearCacheTime
         self.fetch()
     }
     
     deinit {
-        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path)
+        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
     }
     
     enum ImageLoadError: Error {
@@ -113,7 +115,7 @@ public class CustomAsyncImageData: ObservableObject {
     }
     
     func clear() {
-        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path)
+        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
     }
     
     func generateThumb(image: Data, maxSize: CGFloat = 100, callback: @escaping (UIImage?) -> Void) {
@@ -239,16 +241,16 @@ public struct CustomAsyncImage: View {
     private let activeResizable: Bool
     @State var placeholder: AnyView?
     
-    public init(url: URL?, customCacheID: String? = nil, cachePolicy: CustomAsyncImageData.CachePolicy = .cached, resizable: Bool = true, delay: Double = 0, cacheSize: CGFloat = 1024, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
+    public init(url: URL?, customCacheID: String? = nil, cachePolicy: CustomAsyncImageData.CachePolicy = .cached, resizable: Bool = true, delay: Double = 0, cacheSize: CGFloat = 512, clearTime: Double = 30, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
         
         self.activeResizable = resizable
-        self._imageData = StateObject(wrappedValue: CustomAsyncImageData(url: url, customCacheID: customCacheID, cachePolicy: cachePolicy, delay: delay, cacheSize: cacheSize, loadImageComplete: loadImageComplete))
+        self._imageData = StateObject(wrappedValue: CustomAsyncImageData(url: url, customCacheID: customCacheID, cachePolicy: cachePolicy, delay: delay, cacheSize: cacheSize, clearCacheTime: clearTime, loadImageComplete: loadImageComplete))
     }
     
-    public init<PH: View>(url: URL?, customCacheID: String? = nil, cachePolicy: CustomAsyncImageData.CachePolicy = .cached, resizable: Bool = true, cacheSize: CGFloat = 1024, @ViewBuilder placeholder: () -> PH, delay: Double = 0, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
+    public init<PH: View>(url: URL?, customCacheID: String? = nil, cachePolicy: CustomAsyncImageData.CachePolicy = .cached, resizable: Bool = true, cacheSize: CGFloat = 512, clearTime: Double = 30, @ViewBuilder placeholder: () -> PH, delay: Double = 0, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
         self.activeResizable = resizable
         self._placeholder = State(initialValue: AnyView(placeholder()))
-        self._imageData = StateObject(wrappedValue: CustomAsyncImageData(url: url, customCacheID: customCacheID, cachePolicy: cachePolicy, delay: delay, cacheSize: cacheSize, loadImageComplete: loadImageComplete))
+        self._imageData = StateObject(wrappedValue: CustomAsyncImageData(url: url, customCacheID: customCacheID, cachePolicy: cachePolicy, delay: delay, cacheSize: cacheSize, clearCacheTime: clearTime, loadImageComplete: loadImageComplete))
     }
     
     public func placeholder<Content: View>(@ViewBuilder _ content: () -> Content) -> Self {
