@@ -31,7 +31,7 @@ class CustomAsyncImageCache {
     func scheduleCacheClear(id: String, time: Double = 30) {
         self.scheduleCacheRemove[id]?.cancel()
         let timer = DispatchSource.makeTimerSource()
-        timer.schedule(deadline: .now() + 30)
+        timer.schedule(deadline: .now() + time)
         timer.setEventHandler {
             self.imageCache.removeObject(forKey: NSString(string: id))
             self.scheduleCacheRemove[id]?.cancel()
