@@ -278,14 +278,7 @@ public struct CustomAsyncImage: View {
 
     public var body: some View {
         ZStack {
-            if let getURL = self.imageData.fetchCacheURL(), let setImage = UIImage(contentsOfFile: getURL.path) {
-                if self.activeResizable {
-                    Image(uiImage: setImage)
-                        .resizable()
-                } else {
-                    Image(uiImage: setImage)
-                }
-            } else if let getImage = self.image, let setImage = UIImage(data: getImage) {
+            if let getImage = self.image, let setImage = UIImage(data: getImage) {
                 if self.activeResizable {
                     Image(uiImage: setImage)
                         .resizable()
@@ -297,7 +290,7 @@ public struct CustomAsyncImage: View {
             }
         }
         .onAppear {
-            if self.image == nil && self.imageData.fetchCacheURL() == nil {
+            if self.image == nil {
                 self.imageData.fetch { data in
                     if let getData = data {
                         withAnimation {
