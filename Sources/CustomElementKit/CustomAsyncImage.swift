@@ -258,7 +258,7 @@ public struct CustomAsyncImage: View {
     let imageData: CustomAsyncImageData
     private let activeResizable: Bool
     @State var placeholder: AnyView?
-    @State var image: Data? = nil
+    @State var image: UIImage? = nil
     @State var timer: DispatchSourceTimer? = nil
     let clearTime: Double
     
@@ -283,12 +283,12 @@ public struct CustomAsyncImage: View {
 
     public var body: some View {
         ZStack {
-            if let getImage = self.image, let setImage = UIImage(data: getImage) {
+            if let getImage = self.image {
                 if self.activeResizable {
-                    Image(uiImage: setImage)
+                    Image(uiImage: getImage)
                         .resizable()
                 } else {
-                    Image(uiImage: setImage)
+                    Image(uiImage: getImage)
                 }
             } else if let placeholder = placeholder {
                 placeholder
@@ -296,18 +296,24 @@ public struct CustomAsyncImage: View {
         }
         .onAppear {
             if self.image == nil {
-                self.imageData.fetch { data in
-                    if let getData = data {
-                        withAnimation {
-                            self.image = getData
+                DispatchQueue.global(qos: .userInteractive).async {
+                    self.imageData.fetch { data in
+                        if let getData = data, let getImage = UIImage(data: getData) {
+                            DispatchQueue.main.async {
+                                withAnimation {
+                                    self.image = getImage
+                                }
+                            }
+                            
                         }
                     }
                 }
+                
             }
         }
-        .onDisappear {
-            self.image = nil
-        }
+//        .onDisappear {
+//            self.image = nil
+//        }
     }
 }
 
