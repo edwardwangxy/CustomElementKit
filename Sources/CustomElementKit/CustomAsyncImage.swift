@@ -8,6 +8,44 @@
 import SwiftUI
 import Combine
 
+class CustomAsyncImageCache {
+    static let shared = CustomAsyncImageCache()
+    class DataHolder {
+        let data: Data
+        init(data: Data) {
+            self.data = data
+        }
+    }
+    let imageCache = NSCache<NSString, DataHolder>()
+    
+    private var scheduleCacheRemove: [String: DispatchSourceTimer] = [:]
+    
+    func cacheImage(id: String, image: Data) {
+        self.imageCache.setObject(DataHolder(data: image), forKey: NSString(string: id))
+    }
+    
+    func loadImage(id: String) -> Data? {
+        self.scheduleCacheRemove[id]?.cancel()
+        return self.imageCache.object(forKey: NSString(string: id))?.data
+    }
+    
+    func cancelClear(id: String) {
+        self.scheduleCacheRemove[id]?.cancel()
+    }
+    
+    func scheduleCacheClear(id: String, time: Double = 30) {
+        self.scheduleCacheRemove[id]?.cancel()
+        let timer = DispatchSource.makeTimerSource()
+        timer.schedule(deadline: .now() + time)
+        timer.setEventHandler {
+            self.imageCache.removeObject(forKey: NSString(string: id))
+            self.scheduleCacheRemove[id]?.cancel()
+        }
+        timer.resume()
+        self.scheduleCacheRemove[id] = timer
+    }
+    
+}
 
 public class CustomAsyncImageData: ObservableObject {
     public enum CachePolicy {
@@ -48,7 +86,7 @@ public class CustomAsyncImageData: ObservableObject {
     }
     
     deinit {
-//        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
+        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
     }
     
     enum ImageLoadError: Error {
@@ -56,9 +94,13 @@ public class CustomAsyncImageData: ObservableObject {
     }
     
     func fetch(complete: @escaping (Data?) -> Void) {
-        self.loadImage { image in
-            if let getImage = image {
-                complete(getImage)
+        if let data = CustomAsyncImageCache.shared.loadImage(id: self.id ?? self.url.lastPathComponent) {
+            complete(data)
+        } else {
+            self.loadImage { image in
+                if let getImage = image {
+                    complete(getImage)
+                }
             }
         }
     }
@@ -110,7 +152,7 @@ public class CustomAsyncImageData: ObservableObject {
     func cacheImage(url: URL, complete: @escaping (Data?) -> Void) {
         URLSession(configuration: .ephemeral).dataTask(with: url) { data, response, error in
             if let getData = data {
-                if getData.count > Int(self.cacheSize * self.cacheSize * 4) && !url.isFileURL {
+                if getData.count > Int(self.cacheSize * self.cacheSize * 4) {
                     var lastPath = self.url.lastPathComponent
                     if let getCustomID = self.id {
                         lastPath = getCustomID
@@ -149,9 +191,19 @@ public class CustomAsyncImageData: ObservableObject {
                 lastPath = getCustomID
             }
             if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true), self.fm.fileExists(atPath: cachedURL.appendingPathComponent(lastPath).path) {
-                self.cacheImage(url: cachedURL.appendingPathComponent(lastPath), complete: complete)
+                self.cacheImage(url: cachedURL.appendingPathComponent(lastPath)) { data in
+                    complete(data)
+                    if let getData = data {
+                        CustomAsyncImageCache.shared.cacheImage(id: self.id ?? self.url.lastPathComponent, image: getData)
+                    }
+                }
             } else {
-                self.cacheImage(url: self.url, complete: complete)
+                self.cacheImage(url: self.url) { data in
+                    complete(data)
+                    if let getData = data {
+                        CustomAsyncImageCache.shared.cacheImage(id: self.id ?? self.url.lastPathComponent, image: getData)
+                    }
+                }
             }
         }
         
