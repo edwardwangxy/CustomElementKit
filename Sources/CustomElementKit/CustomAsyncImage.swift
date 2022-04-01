@@ -271,15 +271,6 @@ public struct CustomAsyncImage: View {
                 placeholder
             }
         }
-        .onAppear {
-            self.imageData.cancelClear()
-            if self.imageData.image == nil {
-                self.imageData.fetch()
-            }
-        }
-        .onDisappear {
-            self.imageData.clear()
-        }
     }
 }
 
