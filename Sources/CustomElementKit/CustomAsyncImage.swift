@@ -110,7 +110,7 @@ public class CustomAsyncImageData: ObservableObject {
     func cacheImage(url: URL, complete: @escaping (Data?) -> Void) {
         URLSession(configuration: .ephemeral).dataTask(with: url) { data, response, error in
             if let getData = data {
-                if getData.count > Int(self.cacheSize * self.cacheSize * 4) {
+                if getData.count > Int(self.cacheSize * self.cacheSize * 4) && !url.isFileURL {
                     var lastPath = self.url.lastPathComponent
                     if let getCustomID = self.id {
                         lastPath = getCustomID
