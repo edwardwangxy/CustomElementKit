@@ -8,46 +8,13 @@
 import SwiftUI
 import Combine
 
-class CustomAsyncImageCache {
-    static let shared = CustomAsyncImageCache()
-    
-    let imageCache = NSCache<NSString, UIImage>()
-    
-    private var scheduleCacheRemove: [String: DispatchSourceTimer] = [:]
-    
-    func cacheImage(id: String, image: UIImage) {
-        self.imageCache.setObject(image, forKey: NSString(string: id))
-    }
-    
-    func loadImage(id: String) -> UIImage? {
-        self.scheduleCacheRemove[id]?.cancel()
-        return self.imageCache.object(forKey: NSString(string: id))
-    }
-    
-    func cancelClear(id: String) {
-        self.scheduleCacheRemove[id]?.cancel()
-    }
-    
-    func scheduleCacheClear(id: String, time: Double = 30) {
-        self.scheduleCacheRemove[id]?.cancel()
-        let timer = DispatchSource.makeTimerSource()
-        timer.schedule(deadline: .now() + time)
-        timer.setEventHandler {
-            self.imageCache.removeObject(forKey: NSString(string: id))
-            self.scheduleCacheRemove[id]?.cancel()
-        }
-        timer.resume()
-        self.scheduleCacheRemove[id] = timer
-    }
-    
-}
 
 public class CustomAsyncImageData: ObservableObject {
     public enum CachePolicy {
         case reload
         case cached
     }
-    @Published var image: UIImage? = nil
+    
     let url: URL
     let hasURL: Bool
     let cacheSize: CGFloat
@@ -78,44 +45,22 @@ public class CustomAsyncImageData: ObservableObject {
         self.loadImageComplete = loadImageComplete
         self.cacheSize = cacheSize
         self.clearCacheTime = clearCacheTime
-        self.fetch()
     }
     
     deinit {
-        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
+//        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
     }
     
     enum ImageLoadError: Error {
         case loadFail
     }
     
-    func fetch() {
-        if let getImage = CustomAsyncImageCache.shared.loadImage(id: self.id ?? self.url.path) {
-            DispatchQueue.main.async {
-                withAnimation {
-                    self.image = getImage
-                }
-            }
-        } else {
-            self.loadImage { image in
-                if let getImage = image {
-                    CustomAsyncImageCache.shared.cacheImage(id: self.id ?? self.url.path, image: getImage)
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            self.image = getImage
-                        }
-                    }
-                }
+    func fetch(complete: @escaping (Data?) -> Void) {
+        self.loadImage { image in
+            if let getImage = image {
+                complete(getImage)
             }
         }
-    }
-    
-    func cancelClear() {
-        CustomAsyncImageCache.shared.cancelClear(id: self.id ?? self.url.path)
-    }
-    
-    func clear() {
-        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
     }
     
     func generateThumb(image: Data, maxSize: CGFloat = 100, callback: @escaping (UIImage?) -> Void) {
@@ -139,17 +84,17 @@ public class CustomAsyncImageData: ObservableObject {
         }
     }
     
-    func reloadImage(complete: @escaping (UIImage?) -> Void) {
+    func reloadImage(complete: @escaping (Data?) -> Void) {
         var request = URLRequest(url: self.url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
         URLSession(configuration: .default).dataTask(with: request, completionHandler: { data, response, error in
             if let getData = data {
                 if getData.count > Int(self.cacheSize * self.cacheSize * 4) {
                     self.generateThumb(image: getData, maxSize: self.cacheSize) { image in
-                        complete(image)
+                        complete(image?.pngData())
                     }
                 } else {
-                    complete(UIImage(data: getData))
+                    complete(getData)
                 }
                 
             } else {
@@ -162,7 +107,35 @@ public class CustomAsyncImageData: ObservableObject {
         .resume()
     }
     
-    func loadImage(complete: @escaping (UIImage?) -> Void) {
+    func cacheImage(url: URL, complete: @escaping (Data?) -> Void) {
+        URLSession(configuration: .ephemeral).dataTask(with: url) { data, response, error in
+            if let getData = data {
+                if getData.count > Int(self.cacheSize * self.cacheSize * 4) {
+                    var lastPath = self.url.lastPathComponent
+                    if let getCustomID = self.id {
+                        lastPath = getCustomID
+                    }
+                    self.generateThumb(image: getData, maxSize: self.cacheSize) { image in
+                        if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
+                            try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
+                            try? image?.pngData()?.write(to: cachedURL.appendingPathComponent(lastPath))
+                        }
+                        complete(image?.pngData())
+                    }
+                } else {
+                    complete(getData)
+                }
+            } else {
+                complete(nil)
+            }
+            DispatchQueue.main.async {
+                self.loading = false
+            }
+        }
+        .resume()
+    }
+    
+    func loadImage(complete: @escaping (Data?) -> Void) {
         if self.loading {
             return
         }
@@ -176,81 +149,36 @@ public class CustomAsyncImageData: ObservableObject {
                 lastPath = getCustomID
             }
             if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true), self.fm.fileExists(atPath: cachedURL.appendingPathComponent(lastPath).path) {
-                var request = URLRequest(url: cachedURL.appendingPathComponent(lastPath))
-                request.cachePolicy = .returnCacheDataElseLoad
-                URLSession(configuration: .default).dataTask(with: request) { data, response, error in
-                    if let getData = data {
-                        if getData.count > Int(self.cacheSize * self.cacheSize * 4) {
-                            self.generateThumb(image: getData, maxSize: self.cacheSize) { image in
-                                if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
-                                    try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
-                                    try? image?.pngData()?.write(to: cachedURL.appendingPathComponent(lastPath))
-                                }
-                                complete(image)
-                            }
-                        } else {
-                            complete(UIImage(data: getData))
-                        }
-                    } else {
-                        complete(nil)
-                    }
-                    DispatchQueue.main.async {
-                        self.loading = false
-                    }
-                }
-                .resume()
+                self.cacheImage(url: cachedURL.appendingPathComponent(lastPath), complete: complete)
             } else {
-                var request = URLRequest(url: self.url)
-                request.cachePolicy = .returnCacheDataElseLoad
-                URLSession.shared.downloadTask(with: request) { localURL, _, error in
-                    if let getURL = localURL, let data = try? Data(contentsOf: getURL) {
-                        if data.count > Int(self.cacheSize * self.cacheSize * 4) {
-                            self.generateThumb(image: data, maxSize: self.cacheSize) { image in
-                                if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
-                                    try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
-                                    try? image?.pngData()?.write(to: cachedURL.appendingPathComponent(lastPath))
-                                }
-                                complete(image)
-                            }
-                        } else {
-                            let image = UIImage(data: data)
-                            if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
-                                try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
-                                try? image?.pngData()?.write(to: cachedURL.appendingPathComponent(lastPath))
-                            }
-                            complete(image)
-                        }
-                    } else {
-                        complete(nil)
-                    }
-                    DispatchQueue.main.async {
-                        self.loading = false
-                    }
-                }
-                .resume()
+                self.cacheImage(url: self.url, complete: complete)
             }
         }
         
     }
 }
 
-@available(iOS 14.0, *)
 public struct CustomAsyncImage: View {
 
-    @StateObject var imageData: CustomAsyncImageData
+    let imageData: CustomAsyncImageData
     private let activeResizable: Bool
     @State var placeholder: AnyView?
+    @State var image: Data? = nil
+    @State var timer: DispatchSourceTimer? = nil
+    let clearTime: Double
     
     public init(url: URL?, customCacheID: String? = nil, cachePolicy: CustomAsyncImageData.CachePolicy = .cached, resizable: Bool = true, delay: Double = 0, cacheSize: CGFloat = 512, clearTime: Double = 30, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
         
         self.activeResizable = resizable
-        self._imageData = StateObject(wrappedValue: CustomAsyncImageData(url: url, customCacheID: customCacheID, cachePolicy: cachePolicy, delay: delay, cacheSize: cacheSize, clearCacheTime: clearTime, loadImageComplete: loadImageComplete))
+        self.imageData = CustomAsyncImageData(url: url, customCacheID: customCacheID, cachePolicy: cachePolicy, delay: delay, cacheSize: cacheSize, clearCacheTime: clearTime, loadImageComplete: loadImageComplete)
+        self.clearTime = clearTime
     }
     
     public init<PH: View>(url: URL?, customCacheID: String? = nil, cachePolicy: CustomAsyncImageData.CachePolicy = .cached, resizable: Bool = true, cacheSize: CGFloat = 512, clearTime: Double = 30, @ViewBuilder placeholder: () -> PH, delay: Double = 0, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
         self.activeResizable = resizable
         self._placeholder = State(initialValue: AnyView(placeholder()))
-        self._imageData = StateObject(wrappedValue: CustomAsyncImageData(url: url, customCacheID: customCacheID, cachePolicy: cachePolicy, delay: delay, cacheSize: cacheSize, clearCacheTime: clearTime, loadImageComplete: loadImageComplete))
+        self.imageData = CustomAsyncImageData(url: url, customCacheID: customCacheID, cachePolicy: cachePolicy, delay: delay, cacheSize: cacheSize, clearCacheTime: clearTime, loadImageComplete: loadImageComplete)
+        self.clearTime = clearTime
     }
     
     public func placeholder<Content: View>(@ViewBuilder _ content: () -> Content) -> Self {
@@ -260,16 +188,30 @@ public struct CustomAsyncImage: View {
 
     public var body: some View {
         ZStack {
-            if let getImage = self.imageData.image {
+            if let getImage = self.image {
                 if self.activeResizable {
-                    Image(uiImage: getImage)
+                    Image(uiImage: UIImage(data: getImage)!)
                         .resizable()
                 } else {
-                    Image(uiImage: getImage)
+                    Image(uiImage: UIImage(data: getImage)!)
                 }
             } else if let placeholder = placeholder {
                 placeholder
             }
+        }
+        .onAppear {
+            if self.image == nil {
+                self.imageData.fetch { data in
+                    if let getData = data {
+                        withAnimation {
+                            self.image = getData
+                        }
+                    }
+                }
+            }
+        }
+        .onDisappear {
+            self.image = nil
         }
     }
 }
