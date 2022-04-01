@@ -56,7 +56,6 @@ public class CustomAsyncImageData: ObservableObject {
     let url: URL
     let hasURL: Bool
     let cacheSize: CGFloat
-    private var loading: Bool = false
     private let cachePolicy: CachePolicy
     
     private var id: String?
@@ -64,6 +63,7 @@ public class CustomAsyncImageData: ObservableObject {
     let loadImageComplete: (UIImage) -> Void
     let delay: Double
     let clearCacheTime: Double
+    private var cancellable: AnyCancellable? = nil
     
     public init(url: URL?, customCacheID: String? = nil, cachePolicy: CachePolicy = .cached, delay: Double = 0, cacheSize: CGFloat = 400, clearCacheTime: Double = 30, loadImageComplete: @escaping (UIImage) -> Void = {_ in}) {
         if let getURL = url {
@@ -86,6 +86,7 @@ public class CustomAsyncImageData: ObservableObject {
     }
     
     deinit {
+        self.cancellable?.cancel()
         CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
     }
     
@@ -126,62 +127,99 @@ public class CustomAsyncImageData: ObservableObject {
         }
     }
     
-    func reloadImage(complete: @escaping (Data?) -> Void) {
-        var request = URLRequest(url: self.url)
-        request.cachePolicy = .reloadIgnoringLocalCacheData
-        URLSession(configuration: .default).dataTask(with: request, completionHandler: { data, response, error in
-            if let getData = data {
-                if getData.count > Int(self.cacheSize * self.cacheSize * 4) {
-                    self.generateThumb(image: getData, maxSize: self.cacheSize) { image in
-                        complete(image?.pngData())
-                    }
-                } else {
-                    complete(getData)
+    func generateThumb(image: Data, maxSize: CGFloat = 100) -> AnyPublisher<Data, Error> {
+        return Deferred {
+            Future<Data, Error>.init { promise in
+                if image.count <= Int(self.cacheSize * self.cacheSize * 4) {
+                    promise(.success(image))
+                    return
                 }
-                
-            } else {
-                complete(nil)
+                let options = [
+                    kCGImageSourceCreateThumbnailWithTransform: true,
+                    kCGImageSourceCreateThumbnailFromImageAlways: true,
+                    kCGImageSourceThumbnailMaxPixelSize: maxSize] as CFDictionary
+                image.withUnsafeBytes { ptr in
+                    guard let bytes = ptr.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                        promise(.success(image))
+                        return
+                    }
+                    if let cfData = CFDataCreate(kCFAllocatorDefault, bytes, image.count) {
+                        let source = CGImageSourceCreateWithData(cfData, nil)!
+                        let imageReference = CGImageSourceCreateThumbnailAtIndex(source, 0, options)!
+                        let thumbnail = UIImage(cgImage: imageReference) // You get your thumbail here
+                        if let getData = thumbnail.pngData() {
+                            promise(.success(getData))
+                        }
+                    } else {
+                        promise(.success(image))
+                    }
+                }
             }
-            DispatchQueue.main.async {
-                self.loading = false
-            }
-        })
-        .resume()
+        }
+        .eraseToAnyPublisher()
+        
+    }
+    
+    func reloadImage(complete: @escaping (Data?) -> Void) {
+        self.cancellable = URLSession(configuration: .ephemeral).dataTaskPublisher(for: self.url)
+            .mapError({ $0 as Error })
+            .flatMap({ (data: Data, response: URLResponse) in
+                return self.generateThumb(image: data, maxSize: self.cacheSize)
+            })
+            .subscribe(on: DispatchQueue.global(qos: .userInteractive))
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { complete in
+                switch complete {
+                case .finished:
+                    _ = 0
+                case .failure(let err):
+                    print("Image Load Error: \(err)")
+                }
+            }, receiveValue: { image in
+                complete(image)
+            })
     }
     
     func cacheImage(url: URL, complete: @escaping (Data?) -> Void) {
-        URLSession(configuration: .ephemeral).dataTask(with: url) { data, response, error in
-            if let getData = data {
-                if getData.count > Int(self.cacheSize * self.cacheSize * 4) {
-                    var lastPath = self.url.lastPathComponent
-                    if let getCustomID = self.id {
-                        lastPath = getCustomID
-                    }
-                    self.generateThumb(image: getData, maxSize: self.cacheSize) { image in
-                        if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
-                            try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
-                            try? image?.pngData()?.write(to: cachedURL.appendingPathComponent(lastPath))
-                        }
-                        complete(image?.pngData())
-                    }
-                } else {
-                    complete(getData)
+        self.cancellable = URLSession(configuration: .ephemeral).dataTaskPublisher(for: self.url)
+            .mapError({ $0 as Error })
+            .flatMap({ (data: Data, response: URLResponse) in
+                return self.generateThumb(image: data, maxSize: self.cacheSize)
+            })
+            .subscribe(on: DispatchQueue.global(qos: .userInteractive))
+            .receive(on: DispatchQueue.global(qos: .userInteractive))
+            .sink(receiveCompletion: { complete in
+                switch complete {
+                case .finished:
+                    _ = 0
+                case .failure(let err):
+                    print("Image Load Error: \(err)")
                 }
-            } else {
-                complete(nil)
-            }
-            DispatchQueue.main.async {
-                self.loading = false
-            }
+            }, receiveValue: { image in
+                var lastPath = self.url.lastPathComponent
+                if let getCustomID = self.id {
+                    lastPath = getCustomID
+                }
+                if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) {
+                    try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
+                    try? image.write(to: cachedURL.appendingPathComponent(lastPath))
+                }
+                complete(image)
+            })
+    }
+    
+    func fetchCacheURL() -> URL? {
+        var lastPath = self.url.lastPathComponent
+        if let getCustomID = self.id {
+            lastPath = getCustomID
         }
-        .resume()
+        if let cachedURL = try? self.fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true), self.fm.fileExists(atPath: cachedURL.appendingPathComponent(lastPath).path) {
+            return cachedURL.appendingPathComponent(lastPath)
+        }
+        return nil
     }
     
     func loadImage(complete: @escaping (Data?) -> Void) {
-        if self.loading {
-            return
-        }
-        self.loading = true
         switch self.cachePolicy {
         case .reload:
             self.reloadImage(complete: complete)
@@ -240,7 +278,14 @@ public struct CustomAsyncImage: View {
 
     public var body: some View {
         ZStack {
-            if let getImage = self.image, let setImage = UIImage(data: getImage) {
+            if let getURL = self.imageData.fetchCacheURL(), let setImage = UIImage(contentsOfFile: getURL.path) {
+                if self.activeResizable {
+                    Image(uiImage: setImage)
+                        .resizable()
+                } else {
+                    Image(uiImage: setImage)
+                }
+            } else if let getImage = self.image, let setImage = UIImage(data: getImage) {
                 if self.activeResizable {
                     Image(uiImage: setImage)
                         .resizable()
@@ -252,7 +297,7 @@ public struct CustomAsyncImage: View {
             }
         }
         .onAppear {
-            if self.image == nil {
+            if self.image == nil && self.imageData.fetchCacheURL() == nil {
                 self.imageData.fetch { data in
                     if let getData = data {
                         withAnimation {
