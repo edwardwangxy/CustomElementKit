@@ -188,12 +188,12 @@ public struct CustomAsyncImage: View {
 
     public var body: some View {
         ZStack {
-            if let getImage = self.image {
+            if let getImage = self.image, let setImage = UIImage(data: getImage) {
                 if self.activeResizable {
-                    Image(uiImage: UIImage(data: getImage)!)
+                    Image(uiImage: setImage)
                         .resizable()
                 } else {
-                    Image(uiImage: UIImage(data: getImage)!)
+                    Image(uiImage: setImage)
                 }
             } else if let placeholder = placeholder {
                 placeholder
