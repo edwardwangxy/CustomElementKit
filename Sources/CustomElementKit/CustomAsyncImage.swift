@@ -311,9 +311,9 @@ public struct CustomAsyncImage: View {
                 
             }
         }
-//        .onDisappear {
-//            self.image = nil
-//        }
+        .onDisappear {
+            self.image = nil
+        }
     }
 }
 
