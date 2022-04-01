@@ -90,10 +90,16 @@ public class CustomAsyncImageData: ObservableObject {
     }
     
     func fetch() {
-        DispatchQueue.global(qos: .userInitiated).async {
+        if let getImage = CustomAsyncImageCache.shared.loadImage(id: self.id ?? self.url.path) {
+            DispatchQueue.main.async {
+                withAnimation {
+                    self.image = getImage
+                }
+            }
+        } else {
             self.loadImage { image in
                 if let getImage = image {
-    //                CustomAsyncImageCache.shared.cacheImage(id: self.id ?? self.url.path, image: getImage)
+                    CustomAsyncImageCache.shared.cacheImage(id: self.id ?? self.url.path, image: getImage)
                     DispatchQueue.main.async {
                         withAnimation {
                             self.image = getImage
@@ -102,32 +108,14 @@ public class CustomAsyncImageData: ObservableObject {
                 }
             }
         }
-//        if let getImage = CustomAsyncImageCache.shared.loadImage(id: self.id ?? self.url.path) {
-//            DispatchQueue.main.async {
-//                withAnimation {
-//                    self.image = getImage
-//                }
-//            }
-//        } else {
-//            self.loadImage { image in
-//                if let getImage = image {
-//                    CustomAsyncImageCache.shared.cacheImage(id: self.id ?? self.url.path, image: getImage)
-//                    DispatchQueue.main.async {
-//                        withAnimation {
-//                            self.image = getImage
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
     
     func cancelClear() {
-//        CustomAsyncImageCache.shared.cancelClear(id: self.id ?? self.url.path)
+        CustomAsyncImageCache.shared.cancelClear(id: self.id ?? self.url.path)
     }
     
     func clear() {
-//        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
+        CustomAsyncImageCache.shared.scheduleCacheClear(id: self.id ?? self.url.path, time: self.clearCacheTime)
     }
     
     func generateThumb(image: Data, maxSize: CGFloat = 100, callback: @escaping (UIImage?) -> Void) {
