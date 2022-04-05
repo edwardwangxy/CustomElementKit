@@ -201,6 +201,7 @@ public class CustomAsyncImageData: ObservableObject {
                     print("Image Load Error: \(err)")
                 }
             }, receiveValue: { image in
+                complete(image)
                 var lastPath = self.url.lastPathComponent
                 if let getCustomID = self.id {
                     lastPath = getCustomID
@@ -209,7 +210,6 @@ public class CustomAsyncImageData: ObservableObject {
                     try? self.fm.removeItem(at: cachedURL.appendingPathComponent(lastPath))
                     try? image.write(to: cachedURL.appendingPathComponent(lastPath))
                 }
-                complete(image)
             })
     }
     
