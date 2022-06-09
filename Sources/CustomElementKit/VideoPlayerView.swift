@@ -53,6 +53,34 @@ public class PlayerUIView: UIView, ObservableObject {
         self.layer.addSublayer(self.playerLayer)
     }
     
+    func cacheAsset(url: URL) -> AVAsset {
+        if url.isFileURL {
+            return AVAsset(url: url)
+        }
+        let fm = FileManager.default
+        do {
+            let cacheKey = url.lastPathComponent
+            let cacheFolder = try fm.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let cacheURL = cacheFolder.appendingPathComponent(cacheKey)
+            if fm.fileExists(atPath: cacheURL.path) {
+                return AVAsset(url: cacheURL)
+            } else {
+                DispatchQueue.global(qos: .utility).async {
+                    do {
+                        let data = try Data(contentsOf: url)
+                        try data.write(to: cacheURL)
+                    } catch {
+                        print(error)
+                    }
+                }
+                return AVAsset(url: url)
+            }
+        } catch {
+            print(error)
+            return AVAsset(url: url)
+        }
+    }
+    
     public func mute() {
         self.playerLayer.player?.isMuted = true
     }
@@ -78,7 +106,7 @@ public class PlayerUIView: UIView, ObservableObject {
     }
     
     public func updateVideo(url: URL, setCategory: AVAudioSession.Category = .playback, options: AVAudioSession.CategoryOptions) {
-        let asset = AVAsset(url: url)
+        let asset = self.cacheAsset(url: url)
         let item = AVPlayerItem(asset: asset)
         DispatchQueue.main.async {
             self.playerLooper = nil
@@ -95,7 +123,7 @@ public class PlayerUIView: UIView, ObservableObject {
     }
     
     public func loopVideo(url: URL, setCategory: AVAudioSession.Category = .playback, options: AVAudioSession.CategoryOptions) {
-        let asset = AVAsset(url: url)
+        let asset = self.cacheAsset(url: url)
         let item = AVPlayerItem(asset: asset)
         DispatchQueue.main.async {
             self.playerLayer.player?.replaceCurrentItem(with: item)
