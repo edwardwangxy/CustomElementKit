@@ -37,6 +37,110 @@ public extension VideoPlayerView {
     }
 }
 
+public class PIPController: NSObject, AVPictureInPictureControllerDelegate {
+    public var pipController: AVPictureInPictureController?
+    public var stateUpdate: (Bool) -> Void = {_ in}
+    public var restoreAction: () -> Void = {}
+    public var pipWillStart: () -> Void = {}
+    public var pipDidStart: () -> Void = {}
+    public var pipWillEnd: () -> Void = {}
+    public var pipDidEnd: () -> Void = {}
+    public var pipFailed: (Error) -> Void = {_ in}
+    
+    var pipPossibleObservation: NSKeyValueObservation?
+    
+    public init(layer: AVPlayerLayer) {
+        super.init()
+        self.setupPictureInPicture(layer: layer)
+    }
+    
+    public func onPlayingStateUpdate(action: @escaping (Bool) -> Void) {
+        self.stateUpdate = action
+    }
+    
+    public func activePIP() {
+        if self.pipController?.isPictureInPicturePossible ?? false && !(self.pipController?.isPictureInPictureActive ?? false) {
+            self.pipController?.startPictureInPicture()
+        } else {
+            
+        }
+    }
+    
+    public func stopPIP() {
+        if self.pipController?.isPictureInPictureActive ?? false {
+            self.pipController?.stopPictureInPicture()
+        }
+    }
+    
+    public func onPIPStartFailed(action: @escaping (Error) -> Void) {
+        self.pipFailed = action
+    }
+    
+    public func prepareRestore(action: @escaping () -> Void) {
+        self.restoreAction = action
+    }
+    
+    public func onPIPWillBegin(action: @escaping () -> Void) {
+        self.pipWillStart = action
+    }
+    
+    public func onPIPDidBegin(action: @escaping () -> Void) {
+        self.pipDidStart = action
+    }
+    
+    public func onPIPWillEnd(action: @escaping () -> Void) {
+        self.pipWillEnd = action
+    }
+    
+    
+    public func onPIPDidEnd(action: @escaping () -> Void) {
+        self.pipDidEnd = action
+    }
+    
+    private func setupPictureInPicture(layer: AVPlayerLayer) {
+        // Ensure PiP is supported by current device.
+        if AVPictureInPictureController.isPictureInPictureSupported() {
+            // Create a new controller, passing the reference to the AVPlayerLayer.
+            self.pipController = AVPictureInPictureController(playerLayer: layer)
+            self.pipController?.delegate = self
+            self.playStateUpdateWatcher()
+        } else {
+            
+        }
+    }
+    
+    private func playStateUpdateWatcher() {
+        self.pipPossibleObservation = self.pipController?.observe(\AVPictureInPictureController.isPictureInPicturePossible, options: [.initial, .new]) { [weak self] _, change in
+            self?.stateUpdate(change.newValue ?? false)
+        }
+    }
+    
+    public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+        self.restoreAction()
+        completionHandler(true)
+    }
+    
+    public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
+        self.pipFailed(error)
+    }
+    
+    public func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        self.pipWillStart()
+    }
+    
+    public func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        self.pipDidStart()
+    }
+    
+    public func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        self.pipWillEnd()
+    }
+    
+    public func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        self.pipDidEnd()
+    }
+}
+
 public class PlayerUIView: UIView, ObservableObject {
     public let playerLayer = AVPlayerLayer()
     private var playerLooper: AVPlayerLooper? = nil
@@ -44,6 +148,7 @@ public class PlayerUIView: UIView, ObservableObject {
     private var videoCanPlay: (Bool) -> Void = {_ in}
     private var videoComplete: () -> Void = {}
     private var finishObserver: Any? = nil
+    public var pipController: PIPController? = nil
     
     @Published fileprivate var videoUpdate: Bool = false
     
@@ -79,6 +184,10 @@ public class PlayerUIView: UIView, ObservableObject {
             print(error)
             return AVAsset(url: url)
         }
+    }
+    
+    public func setupPIP() {
+        self.pipController = PIPController(layer: self.playerLayer)
     }
     
     public func mute() {
