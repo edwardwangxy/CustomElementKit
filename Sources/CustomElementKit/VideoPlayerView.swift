@@ -54,6 +54,10 @@ public class PIPController: NSObject, AVPictureInPictureControllerDelegate {
         self.setupPictureInPicture(layer: layer)
     }
     
+    public override init() {
+        super.init()
+    }
+    
     public func onPlayingStateUpdate(action: @escaping (Bool) -> Void) {
         self.stateUpdate = action
     }
@@ -97,7 +101,7 @@ public class PIPController: NSObject, AVPictureInPictureControllerDelegate {
         self.pipDidEnd = action
     }
     
-    private func setupPictureInPicture(layer: AVPlayerLayer) {
+    public func setupPictureInPicture(layer: AVPlayerLayer) {
         // Ensure PiP is supported by current device.
         if AVPictureInPictureController.isPictureInPictureSupported() {
             // Create a new controller, passing the reference to the AVPlayerLayer.
