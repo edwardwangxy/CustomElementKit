@@ -37,8 +37,8 @@ public struct ShareSheet: UIViewControllerRepresentable {
         self.excludedActivityTypes = excludedActivityTypes
         self.setActivityItemList = activityItemList
         let shareLinkURL = URL(string: self.shareLink)
-        if self.setActivityItemList.count == 0 {
-            self.setActivityItemList.append(shareLinkURL as Any)
+        if self.setActivityItemList.count == 0, let getShareLink = shareLinkURL {
+            self.setActivityItemList.append(getShareLink as Any)
         }
         self.setActivityItemList.append(self.shareTitle + "\n" + self.shareDescription)
         if let theImage = self.shareImage {
@@ -48,11 +48,7 @@ public struct ShareSheet: UIViewControllerRepresentable {
     }
     
     public func makeUIViewController(context: Context) -> UIActivityViewController {
-        let shareLinkURL = URL(string: self.shareLink)
         var activityItemList: [Any] = [self.shareTitle + "\n" + self.shareDescription] + self.setActivityItemList
-        if self.shareLink.count > 0 {
-            activityItemList.append(shareLinkURL as Any)
-        }
         // If you want to put an image
         if let theImage = shareImage {
             activityItemList.append(theImage as Any)
