@@ -31,7 +31,6 @@ public class CustomTimer {
     public var eventHandler: (() -> Void)?
     private enum State {
         case suspended
-        case canceled
         case resumed
     }
     private var state: State = .suspended
@@ -49,11 +48,7 @@ public class CustomTimer {
     }
     
     public func cancel() {
-        if self.state == .canceled {
-            return
-        }
-        self.state = .canceled
-        self.timer.cancel()
+        self.suspend()
     }
     
     public func suspend() {
@@ -65,7 +60,7 @@ public class CustomTimer {
     }
     deinit {
         self.timer.setEventHandler {}
-        self.cancel()
+        self.timer.cancel()
         self.resume()
         self.eventHandler = nil
     }
