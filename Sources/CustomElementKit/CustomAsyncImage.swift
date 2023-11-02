@@ -23,7 +23,7 @@ class CustomAsyncImageCache {
         self.imageCache.totalCostLimit = 600 * 1024 * 1024
     }
     
-    private var scheduleCacheRemove = NSCache<NSString, DispatchSourceTimer>()
+    private var scheduleCacheRemove = NSCache<NSString, CustomTimer>()
     
     func cacheImage(id: String, image: Data) {
         self.imageCache.setObject(DataHolder(data: image), forKey: NSString(string: id))
@@ -40,8 +40,7 @@ class CustomAsyncImageCache {
     
     func scheduleCacheClear(id: String, time: Double = 30) {
         self.scheduleCacheRemove.object(forKey: NSString(string: id))?.cancel()
-        let timer = DispatchSource.makeTimerSource()
-        timer.schedule(deadline: .now() + time)
+        let timer = CustomTimer(delay: time)
         timer.setEventHandler {
             self.imageCache.removeObject(forKey: NSString(string: id))
             self.scheduleCacheRemove.object(forKey: NSString(string: id))?.cancel()

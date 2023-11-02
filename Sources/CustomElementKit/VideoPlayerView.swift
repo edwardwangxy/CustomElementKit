@@ -148,7 +148,7 @@ public class PIPController: NSObject, AVPictureInPictureControllerDelegate {
 public class PlayerUIView: UIView, ObservableObject {
     public let playerLayer = AVPlayerLayer()
     private var playerLooper: AVPlayerLooper? = nil
-    private var timer: DispatchSourceTimer? = nil
+    private var timer: CustomTimer? = nil
     private var videoCanPlay: (Bool) -> Void = {_ in}
     private var videoComplete: () -> Void = {}
     private var finishObserver: Any? = nil
@@ -294,8 +294,8 @@ extension PlayerUIView {
     
     private func activateTimer() {
         self.timer?.cancel()
-        self.timer = DispatchSource.makeTimerSource()
-        self.timer?.schedule(deadline: .now(), repeating: 0.2)
+        self.timer = nil
+        self.timer = CustomTimer(delay: 0, repeat: 0.2)
         self.timer?.setEventHandler(handler: {
             if let keepUp = self.playerLayer.player?.currentItem?.isPlaybackLikelyToKeepUp, keepUp {
                 self.videoCanPlay(true)
