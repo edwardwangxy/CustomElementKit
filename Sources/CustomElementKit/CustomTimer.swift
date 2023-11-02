@@ -9,18 +9,19 @@ import Foundation
 
 public class CustomTimer {
     let timeInterval: TimeInterval
-    let needRepeat: Bool
-    public init(timeInterval: TimeInterval, repeat setRepeat: Bool = true) {
+    let repeatTime: TimeInterval?
+    
+    public init(delay timeInterval: TimeInterval, repeat repeatTime: TimeInterval? = nil) {
         self.timeInterval = timeInterval
-        self.needRepeat = setRepeat
+        self.repeatTime = repeatTime
     }
     
     private lazy var timer: DispatchSourceTimer = {
         let t = DispatchSource.makeTimerSource()
-        if self.needRepeat {
-            t.schedule(deadline: .now() + self.timeInterval)
+        if let getRepeatTime = self.repeatTime {
+            t.schedule(deadline: .now() + self.timeInterval, repeating: getRepeatTime)
         } else {
-            t.schedule(deadline: .now() + self.timeInterval, repeating: self.timeInterval)
+            t.schedule(deadline: .now() + self.timeInterval)
         }
         t.setEventHandler(handler: { [weak self] in
             self?.eventHandler?()
@@ -30,15 +31,29 @@ public class CustomTimer {
     public var eventHandler: (() -> Void)?
     private enum State {
         case suspended
+        case canceled
         case resumed
     }
     private var state: State = .suspended
+    
+    public func setEventHandler(_ action: @escaping () -> Void) {
+        self.eventHandler = action
+    }
+    
     public func resume() {
         if self.state == .resumed {
             return
         }
         self.state = .resumed
         self.timer.resume()
+    }
+    
+    public func cancel() {
+        if self.state == .canceled {
+            return
+        }
+        self.state = .canceled
+        self.timer.cancel()
     }
     
     public func suspend() {
@@ -50,7 +65,7 @@ public class CustomTimer {
     }
     deinit {
         self.timer.setEventHandler {}
-        self.timer.cancel()
+        self.cancel()
         self.resume()
         self.eventHandler = nil
     }
