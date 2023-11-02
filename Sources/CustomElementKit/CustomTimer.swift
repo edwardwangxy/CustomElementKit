@@ -36,7 +36,7 @@ public class CustomTimer {
     }
     private var state: State = .suspended
     
-    public func setEventHandler(_ action: @escaping () -> Void) {
+    public func setEventHandler(handler action: @escaping () -> Void) {
         self.eventHandler = action
     }
     
