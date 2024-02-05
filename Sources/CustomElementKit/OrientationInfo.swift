@@ -23,13 +23,15 @@ public final class OrientationInfo: ObservableObject {
       
     public init() {
         // fairly arbitrary starting value for 'flat' orientations
+        #if os(visionOS)
+        self.orientation = .landscape
+        #else
         if UIDevice.current.orientation.isLandscape {
             self.orientation = .landscape
         }
         else {
             self.orientation = .portrait
         }
-          
         // unowned self because we unregister before self becomes invalid
         self._observer = NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [unowned self] note in
             guard let device = note.object as? UIDevice else {
@@ -42,6 +44,9 @@ public final class OrientationInfo: ObservableObject {
                 self.orientation = .landscape
             }
         }
+        #endif
+        
+        
     }
       
     deinit {

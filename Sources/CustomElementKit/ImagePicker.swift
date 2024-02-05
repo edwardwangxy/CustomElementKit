@@ -5,9 +5,10 @@
 //  Created by Xiangyu Wang on 6/4/20.
 //  Copyright © 2020 Xiangyu Wang. All rights reserved.
 //
-
+#if !os(visionOS)
 import SwiftUI
 import MobileCoreServices
+
 
 public struct ImagePicker: UIViewControllerRepresentable {
     @Environment(\.presentationMode) var presentationMode
@@ -68,4 +69,4 @@ public struct ImagePicker: UIViewControllerRepresentable {
 
     }
 }
-
+#endif

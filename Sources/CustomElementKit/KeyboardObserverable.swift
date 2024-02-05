@@ -63,13 +63,18 @@ public extension Keyboard {
         
         // MARK: - Static Methods
         public static func from(notification: Notification) -> Keyboard.State? {
+            #if os(visionOS)
+            return nil
+            #else
             return from(
                 notification: notification,
                 safeAreaInsets: UIApplication.shared.windows.first?.safeAreaInsets,
                 screen: .main
             )
+            #endif
         }
         
+        #if !os(visionOS)
         // NOTE: A testable version of the transform that injects the dependencies.
         public static func from(
             notification: Notification,
@@ -101,6 +106,7 @@ public extension Keyboard {
                 height: height
             )
         }
+        #endif
     }
 }
 
