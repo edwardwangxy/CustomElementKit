@@ -24,6 +24,7 @@ public enum Vibration {
     case oldSchool
     
     public func vibrate() {
+        #if !os(visionOS)
         switch self {
         case .error:
             UINotificationFeedbackGenerator().notificationOccurred(.error)
@@ -50,5 +51,6 @@ public enum Vibration {
         case .oldSchool:
             AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
         }
+        #endif
     }
 }
