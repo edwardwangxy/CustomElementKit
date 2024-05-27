@@ -62,6 +62,5 @@ public class CustomTimer {
         self.timer.setEventHandler {}
         self.timer.cancel()
         self.resume()
-        self.eventHandler = nil
     }
 }
