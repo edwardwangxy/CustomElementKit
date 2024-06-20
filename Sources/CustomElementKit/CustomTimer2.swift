@@ -65,6 +65,11 @@ public class CustomTimer2 {
             }
         })
     }
+    
+    deinit {
+        self.setEventHandler {}
+        self.cancel()
+    }
 }
 
 
