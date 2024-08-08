@@ -1,1 +1,1 @@
-pod repo push FATPods CustomElementKit.podspec
+pod repo push FATPods CustomElementKit.podspec --verbose
