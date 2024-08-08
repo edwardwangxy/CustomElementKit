@@ -59,7 +59,6 @@ struct CustomIntensityBGModifier: AnimatableModifier {
         }
         set {
             self.intensity = newValue
-            print(newValue)
         }
     }
     
