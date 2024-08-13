@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
     s.source             = { :git => 'https://gitlab.com/fat-llc/CustomElementKit.git', :tag => "#{s.version}" }
     s.swift_version      = "5.3"
     s.source_files = 'Sources/CustomElementKit/**/*'
-    s.ios.deployment_target  = '13.0'
+    s.ios.deployment_target  = '14.0'
 end
 
 
