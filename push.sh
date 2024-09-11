@@ -1,1 +1,1 @@
-pod repo push FATPods CustomElementKit.podspec --verbose
+pod repo push FATPods CustomElementKit.podspec --verbose --allow-warnings
