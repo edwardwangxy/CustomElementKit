@@ -17,14 +17,7 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
     
     public convenience init(data: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>) {
         self.init()
-        self.config = config
         self.data = data
-        self.setup(layout: self.layout(), config: self.config)
-    }
-    
-    public func viewReload() {
-        self.collectionView.removeFromSuperview()
-        self.setup(layout: self.customLayout ?? self.layout(), config: self.config)
     }
     
     open func layout() -> UICollectionViewLayout {
@@ -64,14 +57,15 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     public typealias UIViewType = CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier>
     
     let dataHelper: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>
-    var customLayout: UICollectionViewLayout? = nil
+    var customLayout: UICollectionViewLayout
     var needReload: Bool = false
     var collectionConfig: (UICollectionView) -> Void = {_ in }
     
     @Binding var data: [SectionData]
     
-    public init(data: Binding<[SectionData]>, config: @escaping (UICollectionView) -> Void = {_ in }, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
+    public init(data: Binding<[SectionData]>, layout: UICollectionViewLayout, config: @escaping (UICollectionView) -> Void = {_ in }, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
         self.collectionConfig = config
+        self.customLayout = layout
         self.dataHelper = CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>()
         self.dataHelper.customCellGenerator = cell
         self.dataHelper.customHeaderGenerator = header
@@ -81,17 +75,11 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     
     public func makeUIView(context: Context) -> CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier> {
         let uiView = CustomDiffableCollectionUIView(data: self.dataHelper)
-        uiView.config = self.collectionConfig
-        uiView.customLayout = self.customLayout
-        uiView.viewReload()
+        uiView.setup(layout: self.customLayout, config: self.collectionConfig)
         return uiView
     }
     
     public func updateUIView(_ uiView: CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier>, context: Context) {
-        if self.needReload {
-            uiView.customLayout = self.customLayout
-            uiView.viewReload()
-        }
         self.applyData()
     }
     
@@ -106,13 +94,6 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
             }
             self.dataHelper.dataSource?.apply(snapshot, animatingDifferences: true)
         }
-    }
-    
-    public func customLayout(_ customLayout: UICollectionViewLayout?) -> Self {
-        var copy = self
-        copy.customLayout = customLayout
-        copy.needReload = true
-        return copy
     }
 }
 
