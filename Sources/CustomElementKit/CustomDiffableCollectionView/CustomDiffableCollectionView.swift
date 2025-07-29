@@ -64,13 +64,14 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     public typealias UIViewType = CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier>
     
     let dataHelper: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>
-    var configuration: (UICollectionView) -> Void = { _ in }
     var customLayout: UICollectionViewLayout? = nil
     var needReload: Bool = false
+    var collectionConfig: (UICollectionView) -> Void = {_ in }
     
     @Binding var data: [SectionData]
     
-    public init(data: Binding<[SectionData]>, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
+    public init(data: Binding<[SectionData]>, config: @escaping (UICollectionView) -> Void = {_ in }, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
+        self.collectionConfig = config
         self.dataHelper = CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>()
         self.dataHelper.customCellGenerator = cell
         self.dataHelper.customHeaderGenerator = header
@@ -80,7 +81,7 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     
     public func makeUIView(context: Context) -> CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier> {
         let uiView = CustomDiffableCollectionUIView(data: self.dataHelper)
-        uiView.config = self.configuration
+        uiView.config = self.collectionConfig
         uiView.customLayout = self.customLayout
         uiView.viewReload()
         return uiView
@@ -88,7 +89,6 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     
     public func updateUIView(_ uiView: CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier>, context: Context) {
         if self.needReload {
-            uiView.config = self.configuration
             uiView.customLayout = self.customLayout
             uiView.viewReload()
         }
@@ -105,13 +105,6 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
             }
             self.dataHelper.dataSource?.apply(snapshot, animatingDifferences: true)
         }
-    }
-    
-    public func config(_ config: @escaping (UICollectionView) -> Void) -> Self {
-        var copy = self
-        copy.configuration = config
-        copy.needReload = true
-        return copy
     }
     
     public func customLayout(_ customLayout: UICollectionViewLayout?) -> Self {

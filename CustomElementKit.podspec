@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name         = "CustomElementKit"
-    s.version      = "1.2.21"
+    s.version      = "1.2.22"
     s.summary      = "SwiftUI Custom Elements"
     s.description  = <<-DESC
     FAT Theme Maker SwiftUI Custom Elements
