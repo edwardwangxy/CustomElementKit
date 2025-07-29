@@ -34,8 +34,8 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
     public func setup(layout: UICollectionViewLayout, config: (UICollectionView) -> Void) {
         self.collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         self.collectionView.register(CustomDiffableCollectionCell.self, forCellWithReuseIdentifier: CustomDiffableCollectionCell.reuseIdentifier)
-        self.collectionView.register(CustomDiffableCollectionReusableHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: CustomDiffableCollectionReusableHeader.reuseIdentifier)
-        self.collectionView.register(CustomDiffableCollectionReusableFooter.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter, withReuseIdentifier: CustomDiffableCollectionReusableFooter.reuseIdentifier)
+        self.collectionView.register(CustomDiffableCollectionReusableView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: CustomDiffableCollectionReusableView.reuseHeaderIdentifier)
+        self.collectionView.register(CustomDiffableCollectionReusableView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter, withReuseIdentifier: CustomDiffableCollectionReusableView.reuseFooterIdentifier)
         
         config(self.collectionView)
         
