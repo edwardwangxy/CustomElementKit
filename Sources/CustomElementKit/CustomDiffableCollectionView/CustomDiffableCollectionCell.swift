@@ -25,10 +25,6 @@ class CustomDiffableCollectionCell: UICollectionViewCell {
         container.view.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 0).isActive = true
         container.view.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0).isActive = true
     }
-    
-    deinit {
-        print("Node Custom Cell Deinit")
-    }
 }
 
 
@@ -48,9 +44,5 @@ class CustomDiffableCollectionReusableView: UICollectionReusableView {
         container.view.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: 0).isActive = true
         container.view.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 0).isActive = true
         container.view.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0).isActive = true
-    }
-    
-    deinit {
-        print("Node Reusable View Deinit")
     }
 }
