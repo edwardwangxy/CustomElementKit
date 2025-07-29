@@ -13,8 +13,8 @@ open class CustomDiffableCollectionDataSourceHelper<SectionIdentifier: Hashable,
     public typealias DiffableDataSource = UICollectionViewDiffableDataSource<SectionIdentifier, ItemIdentifier>
     public typealias DiffableSnapshot = NSDiffableDataSourceSnapshot<SectionIdentifier, ItemIdentifier>
 
-    weak var collectionView: UICollectionView?
-    weak var dataSource: DiffableDataSource?
+    public weak var collectionView: UICollectionView?
+    public weak var dataSource: DiffableDataSource?
     
     public var customHeaderGenerator: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil
     public var customFooterGenerator: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil
