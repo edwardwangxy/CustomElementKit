@@ -29,11 +29,29 @@ class CustomDiffableCollectionCell: UICollectionViewCell {
 }
 
 
-class CustomDiffableCollectionReusableView: UICollectionReusableView {
+class CustomDiffableCollectionReusableHeader: UICollectionReusableView {
     var container: UIViewController?
     
-    static let reuseHeaderIdentifier = "CustomDiffableCollectionReusableViewHeader"
-    static let reuseFooterIdentifier = "CustomDiffableCollectionReusableViewFooter"
+    static let reuseIdentifier = "CustomDiffableCollectionReusableViewHeader"
+    
+    func updateContainer(_ container: UIViewController) {
+        self.container?.view.removeFromSuperview()
+        self.container?.removeFromParent()
+        container.view.backgroundColor = .clear
+        self.container = container
+        self.addSubview(container.view)
+        container.view.translatesAutoresizingMaskIntoConstraints = false
+        container.view.topAnchor.constraint(equalTo: self.topAnchor, constant: 0).isActive = true
+        container.view.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: 0).isActive = true
+        container.view.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 0).isActive = true
+        container.view.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0).isActive = true
+    }
+}
+
+class CustomDiffableCollectionReusableFooter: UICollectionReusableView {
+    var container: UIViewController?
+    
+    static let reuseIdentifier = "CustomDiffableCollectionReusableViewHeader"
     
     func updateContainer(_ container: UIViewController) {
         self.container?.view.removeFromSuperview()

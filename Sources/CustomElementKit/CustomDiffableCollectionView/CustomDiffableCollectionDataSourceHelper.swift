@@ -50,26 +50,26 @@ open class CustomDiffableCollectionDataSourceHelper<SectionIdentifier: Hashable,
         self.dataSource = dataSource
         self.collectionView = collectionView
         
-        dataSource.supplementaryViewProvider = { (collectionView, kind, indexPath) -> CustomDiffableCollectionReusableView? in
+        dataSource.supplementaryViewProvider = { (collectionView, kind, indexPath) -> UICollectionReusableView? in
             guard collectionView.dataSource is DiffableDataSource else {
                 return nil
             }
             if let getHeader = self.headerGenerator(collectionView: collectionView, kind: kind, indexPath: indexPath) {
-                if let title = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: CustomDiffableCollectionReusableView.reuseHeaderIdentifier, for: indexPath) as? CustomDiffableCollectionReusableView {
+                if let title = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: CustomDiffableCollectionReusableHeader.reuseIdentifier, for: indexPath) as? CustomDiffableCollectionReusableHeader {
                     title.updateContainer(UIHostingController(rootView: getHeader))
                     return title
                 } else {
-                    let newView = CustomDiffableCollectionReusableView()
+                    let newView = CustomDiffableCollectionReusableHeader()
                     newView.updateContainer(UIHostingController(rootView: getHeader))
                     return newView
                 }
             }
             if let getFooter = self.footerGenerator(collectionView: collectionView, kind: kind, indexPath: indexPath) {
-                if let footer = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: CustomDiffableCollectionReusableView.reuseFooterIdentifier, for: indexPath) as? CustomDiffableCollectionReusableView {
+                if let footer = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: CustomDiffableCollectionReusableFooter.reuseIdentifier, for: indexPath) as? CustomDiffableCollectionReusableFooter {
                     footer.updateContainer(UIHostingController(rootView: getFooter))
                     return footer
                 } else {
-                    let newView = CustomDiffableCollectionReusableView()
+                    let newView = CustomDiffableCollectionReusableFooter()
                     newView.updateContainer(UIHostingController(rootView: getFooter))
                     return newView
                 }
