@@ -17,6 +17,7 @@ class CustomDiffableCollectionCell: UICollectionViewCell {
     func updateContainer(_ container: UIViewController) {
         self.container?.view.removeFromSuperview()
         self.container?.removeFromParent()
+        container.view.backgroundColor = .clear
         self.container = container
         self.addSubview(container.view)
         container.view.translatesAutoresizingMaskIntoConstraints = false
@@ -37,6 +38,7 @@ class CustomDiffableCollectionReusableView: UICollectionReusableView {
     func updateContainer(_ container: UIViewController) {
         self.container?.view.removeFromSuperview()
         self.container?.removeFromParent()
+        container.view.backgroundColor = .clear
         self.container = container
         self.addSubview(container.view)
         container.view.translatesAutoresizingMaskIntoConstraints = false
