@@ -17,7 +17,14 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
     
     public convenience init(data: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>) {
         self.init()
+        self.config = config
         self.data = data
+        self.setup(layout: self.layout(), config: self.config)
+    }
+    
+    public func viewReload() {
+        self.collectionView.removeFromSuperview()
+        self.setup(layout: self.customLayout ?? self.layout(), config: self.config)
     }
     
     open func layout() -> UICollectionViewLayout {
@@ -57,15 +64,13 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     public typealias UIViewType = CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier>
     
     let dataHelper: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>
-    var customLayout: UICollectionViewLayout
+    var customLayout: UICollectionViewLayout? = nil
     var needReload: Bool = false
     var collectionConfig: (UICollectionView) -> Void = {_ in }
     
     @Binding var data: [SectionData]
     
-    public init(data: Binding<[SectionData]>, layout: UICollectionViewLayout, config: @escaping (UICollectionView) -> Void = {_ in }, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
-        self.collectionConfig = config
-        self.customLayout = layout
+    public init(data: Binding<[SectionData]>, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
         self.dataHelper = CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>()
         self.dataHelper.customCellGenerator = cell
         self.dataHelper.customHeaderGenerator = header
@@ -75,15 +80,22 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     
     public func makeUIView(context: Context) -> CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier> {
         let uiView = CustomDiffableCollectionUIView(data: self.dataHelper)
-        uiView.setup(layout: self.customLayout, config: self.collectionConfig)
+        uiView.config = self.collectionConfig
+        uiView.customLayout = self.customLayout
+        uiView.viewReload()
         return uiView
     }
     
     public func updateUIView(_ uiView: CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier>, context: Context) {
-        self.applyData()
+        if self.needReload {
+            uiView.config = self.collectionConfig
+            uiView.customLayout = self.customLayout
+            uiView.viewReload()
+        }
+        self.applyData(dataHelper: uiView.data)
     }
     
-    func applyData() {
+    func applyData(dataHelper: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>) {
         let allData = self.data
         DispatchQueue.global().async {
             var snapshot = CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>.DiffableSnapshot()
@@ -92,8 +104,22 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
             for eachSection in allData {
                 snapshot.appendItems(eachSection.items, toSection: eachSection.section)
             }
-            self.dataHelper.dataSource?.apply(snapshot, animatingDifferences: true)
+            dataHelper.dataSource?.apply(snapshot, animatingDifferences: true)
         }
+    }
+    
+    public func config(_ config: @escaping (UICollectionView) -> Void) -> Self {
+        var copy = self
+        copy.collectionConfig = config
+        copy.needReload = true
+        return copy
+    }
+    
+    public func customLayout(_ customLayout: UICollectionViewLayout?) -> Self {
+        var copy = self
+        copy.customLayout = customLayout
+        copy.needReload = true
+        return copy
     }
 }
 
