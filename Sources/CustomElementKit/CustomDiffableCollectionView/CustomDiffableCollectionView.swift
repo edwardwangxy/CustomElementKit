@@ -96,11 +96,12 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     }
     
     func applyData() {
+        let allData = self.data
         DispatchQueue.global().async {
             var snapshot = CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>.DiffableSnapshot()
-            let allSectsions = self.data.map({ $0.section })
+            let allSectsions = allData.map({ $0.section })
             snapshot.appendSections(allSectsions)
-            for eachSection in self.data {
+            for eachSection in allData {
                 snapshot.appendItems(eachSection.items, toSection: eachSection.section)
             }
             self.dataHelper.dataSource?.apply(snapshot, animatingDifferences: true)
