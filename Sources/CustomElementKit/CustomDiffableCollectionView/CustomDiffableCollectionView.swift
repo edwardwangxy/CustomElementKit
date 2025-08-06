@@ -12,19 +12,19 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
     public var collectionView: UICollectionView!
     public var data: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>!
     public var dataSource: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>.DiffableDataSource!
-    public var config: ((UICollectionView) -> Void) = { _ in }
-    public var customLayout: UICollectionViewLayout? = nil
+    public var config: ((UICollectionView) -> Void) = {_ in}
+    public var layoutSubViewsAction: () -> Void = {}
+    public var customLayout: UICollectionViewLayout? = nil {
+        didSet {
+            self.collectionView.setCollectionViewLayout(self.layout(), animated: true)
+        }
+    }
     
-    public convenience init(data: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>) {
+    public convenience init(data: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>, config: @escaping (UICollectionView) -> Void = { _ in }) {
         self.init()
         self.config = config
         self.data = data
         self.setup(layout: self.layout(), config: self.config)
-    }
-    
-    public func viewReload() {
-        self.collectionView.removeFromSuperview()
-        self.setup(layout: self.customLayout ?? self.layout(), config: self.config)
     }
     
     open func layout() -> UICollectionViewLayout {
@@ -49,6 +49,7 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
         self.collectionView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 0).isActive = true
         self.collectionView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0).isActive = true
     }
+
 }
 
 public protocol CustomDiffableSectionData {
@@ -70,7 +71,9 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     
     @Binding var data: [SectionData]
     
-    public init(data: Binding<[SectionData]>, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
+    public init(data: Binding<[SectionData]>, config: @escaping (UICollectionView) -> Void = {_ in }, layout: UICollectionViewLayout? = nil, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
+        self.collectionConfig = config
+        self.customLayout = layout
         self.dataHelper = CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>()
         self.dataHelper.customCellGenerator = cell
         self.dataHelper.customHeaderGenerator = header
@@ -79,18 +82,14 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     }
     
     public func makeUIView(context: Context) -> CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier> {
-        let uiView = CustomDiffableCollectionUIView(data: self.dataHelper)
-        uiView.config = self.collectionConfig
+        let uiView = CustomDiffableCollectionUIView(data: self.dataHelper, config: self.collectionConfig)
         uiView.customLayout = self.customLayout
-        uiView.viewReload()
         return uiView
     }
     
     public func updateUIView(_ uiView: CustomDiffableCollectionUIView<SectionIdentifier, ItemIdentifier>, context: Context) {
         if self.needReload {
-            uiView.config = self.collectionConfig
             uiView.customLayout = self.customLayout
-            uiView.viewReload()
         }
         self.applyData(dataHelper: uiView.data)
     }
@@ -106,13 +105,6 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
             }
             dataHelper.dataSource?.apply(snapshot, animatingDifferences: true)
         }
-    }
-    
-    public func config(_ config: @escaping (UICollectionView) -> Void) -> Self {
-        var copy = self
-        copy.collectionConfig = config
-        copy.needReload = true
-        return copy
     }
     
     public func customLayout(_ customLayout: UICollectionViewLayout?) -> Self {

@@ -9,12 +9,12 @@ import Foundation
 import SwiftUI
 import UIKit
 
-class CustomDiffableCollectionCell: UICollectionViewCell {
+public class CustomDiffableCollectionCell: UICollectionViewCell {
     var container: UIViewController?
     
     static let reuseIdentifier = "CustomDiffableCollectionCell"
     
-    func updateContainer(_ container: UIViewController) {
+    public func updateContainer(_ container: UIViewController) {
         self.container?.view.removeFromSuperview()
         self.container?.removeFromParent()
         container.view.backgroundColor = .clear
@@ -29,13 +29,13 @@ class CustomDiffableCollectionCell: UICollectionViewCell {
 }
 
 
-class CustomDiffableCollectionReusableView: UICollectionReusableView {
+open class CustomDiffableCollectionReusableView: UICollectionReusableView {
     var container: UIViewController?
     
     static let reuseHeaderIdentifier = "CustomDiffableCollectionReusableViewHeader"
     static let reuseFooterIdentifier = "CustomDiffableCollectionReusableViewFooter"
     
-    func updateContainer(_ container: UIViewController) {
+    public func updateContainer(_ container: UIViewController) {
         self.container?.view.removeFromSuperview()
         self.container?.removeFromParent()
         container.view.backgroundColor = .clear
