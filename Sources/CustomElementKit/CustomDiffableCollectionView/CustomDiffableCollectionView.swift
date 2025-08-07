@@ -71,6 +71,8 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     
     @Binding var data: [SectionData]
     
+    private let updateQueue = DispatchQueue(label: "CustomDiffableDataUpdateQueue", qos: .background)
+    
     public init(data: Binding<[SectionData]>, config: @escaping (UICollectionView) -> Void = {_ in }, layout: UICollectionViewLayout? = nil, cell: @escaping (UICollectionView, IndexPath, ItemIdentifier) -> AnyView, header: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil, footer: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil) {
         self.collectionConfig = config
         self.customLayout = layout
@@ -96,7 +98,7 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
     
     func applyData(dataHelper: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>) {
         let allData = self.data
-        DispatchQueue.global().async {
+        self.updateQueue.async {
             var snapshot = CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>.DiffableSnapshot()
             let allSectsions = allData.map({ $0.section })
             snapshot.appendSections(allSectsions)
@@ -113,6 +115,25 @@ public struct CustomDiffableCollectionView<SectionIdentifier: Hashable, ItemIden
         copy.needReload = true
         return copy
     }
+    
+    public func contextMenu(_ configuration: @escaping (UICollectionView, [IndexPath], CGPoint) -> UIContextMenuConfiguration?) -> Self {
+        let copy = self
+        copy.dataHelper.contextMenuConfiguration = configuration
+        return copy
+    }
+    
+    public func contextMenuHighlightPreview(_ preview: @escaping (UICollectionView, UIContextMenuConfiguration, IndexPath) -> UITargetedPreview?) -> Self {
+        let copy = self
+        copy.dataHelper.contextMenuHighlightPreviewConfiguration = preview
+        return copy
+    }
+    
+    public func contextMenuDismissalPreview(_ preview: @escaping (UICollectionView, UIContextMenuConfiguration, IndexPath) -> UITargetedPreview?) -> Self {
+        let copy = self
+        copy.dataHelper.contextMenuDismissalPreviewConfiguration = preview
+        return copy
+    }
+    
 }
 
 

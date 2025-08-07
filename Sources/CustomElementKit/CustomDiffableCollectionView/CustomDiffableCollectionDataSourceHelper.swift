@@ -20,6 +20,10 @@ open class CustomDiffableCollectionDataSourceHelper<SectionIdentifier: Hashable,
     public var customFooterGenerator: ((UICollectionView, String, IndexPath) -> AnyView?)? = nil
     public var customCellGenerator: ((UICollectionView, IndexPath, ItemIdentifier) -> AnyView) = {_, _, _ in AnyView(ZStack{})}
     
+    public var contextMenuConfiguration: ((UICollectionView, [IndexPath], CGPoint) -> UIContextMenuConfiguration?)? = nil
+    public var contextMenuHighlightPreviewConfiguration: ((UICollectionView, UIContextMenuConfiguration, IndexPath) -> UITargetedPreview?)? = nil
+    public var contextMenuDismissalPreviewConfiguration: ((UICollectionView, UIContextMenuConfiguration, IndexPath) -> UITargetedPreview?)? = nil
+    
     @ViewBuilder
     open func headerGenerator(collectionView: UICollectionView, kind: String, indexPath: IndexPath) -> (some View)? {
         self.customHeaderGenerator?(collectionView, kind, indexPath)
@@ -96,5 +100,17 @@ open class CustomDiffableCollectionDataSourceHelper<SectionIdentifier: Hashable,
         if indexPath.row >= collectionView.numberOfItems(inSection: indexPath.section) - self.batchFetchOnItem(), shouldBatchFetch(collectionView: collectionView, cell: cell, indexPath: indexPath) {
             batchFetchAction(collectionView: collectionView, cell: cell, indexPath: indexPath)
         }
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
+        return self.contextMenuConfiguration?(collectionView, indexPaths, point)
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, contextMenuConfiguration configuration: UIContextMenuConfiguration, highlightPreviewForItemAt indexPath: IndexPath) -> UITargetedPreview? {
+        return self.contextMenuHighlightPreviewConfiguration?(collectionView, configuration, indexPath)
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, contextMenuConfiguration configuration: UIContextMenuConfiguration, dismissalPreviewForItemAt indexPath: IndexPath) -> UITargetedPreview? {
+        return self.contextMenuDismissalPreviewConfiguration?(collectionView, configuration, indexPath)
     }
 }
