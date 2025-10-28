@@ -19,6 +19,7 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
             self.collectionView.setCollectionViewLayout(self.layout(), animated: true)
         }
     }
+    private let updateQueue = DispatchQueue(label: "CustomDiffableDataUpdateQueue", qos: .background)
     
     public convenience init(data: CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>, config: @escaping (UICollectionView) -> Void = { _ in }) {
         self.init()
@@ -29,7 +30,7 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
     
     public func configController<SectionData: CustomDiffableSectionData>(controller: CustomDiffableCollectionDataController<SectionData>) where SectionData.SectionIdentifier == SectionIdentifier, SectionData.ItemIdentifier == ItemIdentifier {
         controller.applyDataConfig = { [weak self] datas in
-            DispatchQueue.global().async {
+            self?.updateQueue.async {
                 guard let self = self else { return }
                 var snapshot = CustomDiffableCollectionDataSourceHelper<SectionIdentifier, ItemIdentifier>.DiffableSnapshot()
                 let allSectsions = datas.map({ $0.section })
@@ -41,7 +42,7 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
             }
         }
         controller.appendDataConfig = { [weak self] datas in
-            DispatchQueue.global().async {
+            self?.updateQueue.async {
                 guard let self = self else { return }
                 var snapshot = self.dataSource.snapshot()
                 datas.forEach { eachData in
@@ -51,15 +52,17 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
             }
         }
         controller.appendBeforeConfig = { [weak self] datas, before in
-            DispatchQueue.global().async {
+            self?.updateQueue.async {
                 guard let self = self else { return }
                 var snapshot = self.dataSource.snapshot()
-                snapshot.insertItems(datas, beforeItem: before)
-                self.dataSource?.apply(snapshot, animatingDifferences: true)
+                if snapshot.itemIdentifiers.contains(before) {
+                    snapshot.insertItems(datas, beforeItem: before)
+                    self.dataSource?.apply(snapshot, animatingDifferences: true)
+                }
             }
         }
         controller.removeDataConfig = { [weak self] datas in
-            DispatchQueue.global().async {
+            self?.updateQueue.async {
                 guard let self = self else { return }
                 var snapshot = self.dataSource.snapshot()
                 snapshot.deleteItems(datas)
@@ -67,15 +70,17 @@ open class CustomDiffableCollectionUIView<SectionIdentifier: Hashable, ItemIdent
             }
         }
         controller.modifyDataConfig = { [weak self] items in
-            DispatchQueue.global().async {
+            self?.updateQueue.async {
                 guard let self = self else { return }
                 var snapshot = self.dataSource.snapshot()
-                snapshot.reloadItems(items)
+                let existingItems = items.filter({ snapshot.itemIdentifiers.contains($0) })
+//                let nonExistingItems = items.filter({ !snapshot.itemIdentifiers.contains($0) })
+                snapshot.reloadItems(existingItems)
                 self.dataSource?.apply(snapshot, animatingDifferences: true)
             }
         }
         controller.reloadSectionConfig = { [weak self] sections in
-            DispatchQueue.global().async {
+            self?.updateQueue.async {
                 guard let self = self else { return }
                 var snapshot = self.dataSource.snapshot()
                 snapshot.reloadSections(sections)
